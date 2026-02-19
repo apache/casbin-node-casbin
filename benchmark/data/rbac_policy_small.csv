@@ -1,0 +1,200 @@
+p, user0, data0, read
+g, user0, group0
+p, user1, data0, read
+g, user1, group0
+p, user2, data0, read
+g, user2, group0
+p, user3, data0, read
+g, user3, group0
+p, user4, data0, read
+g, user4, group0
+p, user5, data0, read
+g, user5, group0
+p, user6, data0, read
+g, user6, group0
+p, user7, data0, read
+g, user7, group0
+p, user8, data0, read
+g, user8, group0
+p, user9, data0, read
+g, user9, group0
+p, user10, data1, read
+g, user10, group1
+p, user11, data1, read
+g, user11, group1
+p, user12, data1, read
+g, user12, group1
+p, user13, data1, read
+g, user13, group1
+p, user14, data1, read
+g, user14, group1
+p, user15, data1, read
+g, user15, group1
+p, user16, data1, read
+g, user16, group1
+p, user17, data1, read
+g, user17, group1
+p, user18, data1, read
+g, user18, group1
+p, user19, data1, read
+g, user19, group1
+p, user20, data2, read
+g, user20, group2
+p, user21, data2, read
+g, user21, group2
+p, user22, data2, read
+g, user22, group2
+p, user23, data2, read
+g, user23, group2
+p, user24, data2, read
+g, user24, group2
+p, user25, data2, read
+g, user25, group2
+p, user26, data2, read
+g, user26, group2
+p, user27, data2, read
+g, user27, group2
+p, user28, data2, read
+g, user28, group2
+p, user29, data2, read
+g, user29, group2
+p, user30, data3, read
+g, user30, group3
+p, user31, data3, read
+g, user31, group3
+p, user32, data3, read
+g, user32, group3
+p, user33, data3, read
+g, user33, group3
+p, user34, data3, read
+g, user34, group3
+p, user35, data3, read
+g, user35, group3
+p, user36, data3, read
+g, user36, group3
+p, user37, data3, read
+g, user37, group3
+p, user38, data3, read
+g, user38, group3
+p, user39, data3, read
+g, user39, group3
+p, user40, data4, read
+g, user40, group4
+p, user41, data4, read
+g, user41, group4
+p, user42, data4, read
+g, user42, group4
+p, user43, data4, read
+g, user43, group4
+p, user44, data4, read
+g, user44, group4
+p, user45, data4, read
+g, user45, group4
+p, user46, data4, read
+g, user46, group4
+p, user47, data4, read
+g, user47, group4
+p, user48, data4, read
+g, user48, group4
+p, user49, data4, read
+g, user49, group4
+p, user50, data5, read
+g, user50, group5
+p, user51, data5, read
+g, user51, group5
+p, user52, data5, read
+g, user52, group5
+p, user53, data5, read
+g, user53, group5
+p, user54, data5, read
+g, user54, group5
+p, user55, data5, read
+g, user55, group5
+p, user56, data5, read
+g, user56, group5
+p, user57, data5, read
+g, user57, group5
+p, user58, data5, read
+g, user58, group5
+p, user59, data5, read
+g, user59, group5
+p, user60, data6, read
+g, user60, group6
+p, user61, data6, read
+g, user61, group6
+p, user62, data6, read
+g, user62, group6
+p, user63, data6, read
+g, user63, group6
+p, user64, data6, read
+g, user64, group6
+p, user65, data6, read
+g, user65, group6
+p, user66, data6, read
+g, user66, group6
+p, user67, data6, read
+g, user67, group6
+p, user68, data6, read
+g, user68, group6
+p, user69, data6, read
+g, user69, group6
+p, user70, data7, read
+g, user70, group7
+p, user71, data7, read
+g, user71, group7
+p, user72, data7, read
+g, user72, group7
+p, user73, data7, read
+g, user73, group7
+p, user74, data7, read
+g, user74, group7
+p, user75, data7, read
+g, user75, group7
+p, user76, data7, read
+g, user76, group7
+p, user77, data7, read
+g, user77, group7
+p, user78, data7, read
+g, user78, group7
+p, user79, data7, read
+g, user79, group7
+p, user80, data8, read
+g, user80, group8
+p, user81, data8, read
+g, user81, group8
+p, user82, data8, read
+g, user82, group8
+p, user83, data8, read
+g, user83, group8
+p, user84, data8, read
+g, user84, group8
+p, user85, data8, read
+g, user85, group8
+p, user86, data8, read
+g, user86, group8
+p, user87, data8, read
+g, user87, group8
+p, user88, data8, read
+g, user88, group8
+p, user89, data8, read
+g, user89, group8
+p, user90, data9, read
+g, user90, group9
+p, user91, data9, read
+g, user91, group9
+p, user92, data9, read
+g, user92, group9
+p, user93, data9, read
+g, user93, group9
+p, user94, data9, read
+g, user94, group9
+p, user95, data9, read
+g, user95, group9
+p, user96, data9, read
+g, user96, group9
+p, user97, data9, read
+g, user97, group9
+p, user98, data9, read
+g, user98, group9
+p, user99, data9, read
+g, user99, group9
