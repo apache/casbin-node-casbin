@@ -94,8 +94,8 @@ function readFile(path: string, encoding?: string): Promise<string> {
   const fs = mustGetDefaultFileSystem();
   return new Promise<string>((resolve, reject) => {
     try {
-      const content = fs.readFileSync(path, encoding || 'utf8');
-      resolve(content.toString());
+      const content = fs.readFileSync(path, encoding || 'utf8') as string;
+      resolve(content);
     } catch (e) {
       reject(e);
     }
