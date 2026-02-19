@@ -90,12 +90,12 @@ function setEquals(a: string[], b: string[]): boolean {
 }
 
 // readFile return a promise for readFile.
-function readFile(path: string, encoding?: string): any {
+function readFile(path: string, encoding?: string): Promise<string> {
   const fs = mustGetDefaultFileSystem();
-  return new Promise((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     try {
-      fs.readFileSync(path, encoding || 'utf8');
-      resolve();
+      const content = fs.readFileSync(path, encoding || 'utf8') as string;
+      resolve(content);
     } catch (e) {
       reject(e);
     }
@@ -103,9 +103,9 @@ function readFile(path: string, encoding?: string): any {
 }
 
 // writeFile return a promise for writeFile.
-function writeFile(path: string, file: string, encoding?: string): any {
+function writeFile(path: string, file: string, encoding?: string): Promise<void> {
   const fs = mustGetDefaultFileSystem();
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     try {
       fs.writeFileSync(path, file, encoding || 'utf-8');
       resolve();
