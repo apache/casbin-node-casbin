@@ -28,7 +28,7 @@
 
 import { Buffer } from 'buffer/';
 
-const ipv4Regex = /^(\d{1,3}\.){3,3}\d{1,3}$/;
+const ipv4Regex = /^(25[0-5]|2[0-4]\d|1\d\d|\d?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|\d?\d)){3}$/;
 const ipv6Regex = /^(::)?(((\d{1,3}\.){3}(\d{1,3}){1})?([0-9a-f]){0,4}:{0,2}){1,8}(::)?$/i;
 
 export const ip = {
@@ -131,14 +131,13 @@ export const ip = {
   },
 
   isV6Format: function (ip: string): boolean {
-    return ipv6Regex.test(ip);
+    return ip.includes(':') && ipv6Regex.test(ip);
   },
 
   fromPrefixLen: function (prefixlen: number, family?: string): string {
+    family = _normalizeFamily(typeof family === 'string' ? family : 'ipv4');
     if (prefixlen > 32) {
       family = 'ipv6';
-    } else {
-      family = _normalizeFamily(typeof family === 'string' ? family : '');
     }
 
     let len = 4;
@@ -198,7 +197,7 @@ export const ip = {
   },
 
   subnet: function (addr: string, mask: string): any {
-    const networkAddress = ip.toLong(ip.mask(addr, mask));
+    const networkBuffer = ip.toBuffer(ip.mask(addr, mask));
 
     // Calculate the mask's length.
     const maskBuffer = ip.toBuffer(mask);
@@ -218,7 +217,17 @@ export const ip = {
 
     return {
       contains: function (other: string) {
-        return networkAddress === ip.toLong(ip.mask(other, mask));
+        let otherBuffer: Buffer;
+        try {
+          otherBuffer = ip.toBuffer(ip.mask(other, mask));
+        } catch {
+          return false;
+        }
+        if (networkBuffer.length !== otherBuffer.length) return false;
+        for (let i = 0; i < networkBuffer.length; i++) {
+          if (networkBuffer[i] !== otherBuffer[i]) return false;
+        }
+        return true;
       },
     };
   },
@@ -228,7 +237,8 @@ export const ip = {
     const addr = cidrParts[0];
     if (cidrParts.length !== 2) throw new Error('invalid CIDR subnet: ' + addr);
 
-    const mask = ip.fromPrefixLen(parseInt(cidrParts[1], 10));
+    const family = ip.isV6Format(addr) ? 'ipv6' : 'ipv4';
+    const mask = ip.fromPrefixLen(parseInt(cidrParts[1], 10), family);
 
     return ip.subnet(addr, mask);
   },

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { getLogger, logPrint, Util as util } from '../src';
+import { ip } from '../src/util/ip';
 import { compile } from '@casbin/expression-eval';
 
 test('test enableLog success', () => {
@@ -143,6 +144,94 @@ test('test ipMatchFunc', () => {
   expect(() => util.ipMatchFunc('I am alice', '127.0.0.1')).toThrow(Error);
   expect(() => util.ipMatchFunc('127.0.0.1', 'I am alice')).toThrow(/invalid/g);
   expect(util.ipMatchFunc('192.168.2.189', '192.168.1.134/26')).toEqual(false);
+});
+
+// CVE fix: IPv4 octet overflow allow-list bypass
+// Before fix: 448.168.2.10 was silently reduced to 192.168.2.10 (448 & 0xff = 192),
+// allowing bypass of 192.168.2.0/24 allow-lists.
+test('test ipMatchFunc - IPv4 octet overflow is rejected', () => {
+  // Overflowed octets must be treated as invalid IPs, not silently normalized.
+  expect(() => util.ipMatchFunc('448.168.2.10', '192.168.2.0/24')).toThrow(Error);
+  expect(() => util.ipMatchFunc('266.0.0.1', '10.0.0.0/16')).toThrow(Error);
+  expect(() => util.ipMatchFunc('203.0.369.42', '203.0.113.0/24')).toThrow(Error);
+  // Exact /32 host rule bypass: 459.0.113.42 must NOT match 203.0.113.42/32
+  expect(() => util.ipMatchFunc('459.0.113.42', '203.0.113.42/32')).toThrow(Error);
+  // Boundary values: 255 is valid, 256 is not
+  expect(util.ipMatchFunc('10.0.255.1', '10.0.0.0/16')).toEqual(true);
+  expect(() => util.ipMatchFunc('10.0.256.1', '10.0.0.0/16')).toThrow(Error);
+});
+
+// CVE fix: IPv6 CIDR matching was completely broken — any string (including "abc")
+// matched any IPv6 CIDR policy due to toLong() collapsing everything to 0.
+test('test ipMatchFunc - IPv6 CIDR containment is correct', () => {
+  // Positive: addresses that should actually match
+  expect(util.ipMatchFunc('::1', '::1/128')).toEqual(true);
+  expect(util.ipMatchFunc('fe80::1', 'fe80::/10')).toEqual(true);
+  expect(util.ipMatchFunc('fe80::ffff', 'fe80::/10')).toEqual(true);
+  expect(util.ipMatchFunc('2001:db8::1', '2001:db8::/32')).toEqual(true);
+  expect(util.ipMatchFunc('fd00::1', 'fd00::/8')).toEqual(true);
+
+  // Negative: addresses outside the CIDR must not match
+  expect(util.ipMatchFunc('fe80::1', '::1/128')).toEqual(false);
+  expect(util.ipMatchFunc('ffff::1', '::1/128')).toEqual(false);
+  expect(util.ipMatchFunc('::', '::1/128')).toEqual(false);
+  expect(util.ipMatchFunc('2001:db8::1', 'fe80::/10')).toEqual(false);
+  expect(util.ipMatchFunc('::1', 'fe80::/10')).toEqual(false);
+  expect(util.ipMatchFunc('fe80::1', '2001:db8::/32')).toEqual(false);
+  expect(util.ipMatchFunc('::1', '2001:db8::/32')).toEqual(false);
+  expect(util.ipMatchFunc('::1', 'fd00::/8')).toEqual(false);
+  expect(util.ipMatchFunc('fe80::1', 'fd00::/8')).toEqual(false);
+});
+
+// CVE fix: garbage input like "abc" must be rejected, not silently match IPv6 policies.
+test('test ipMatchFunc - non-IP strings are rejected as ip1', () => {
+  expect(() => util.ipMatchFunc('abc', '::1/128')).toThrow(Error);
+  expect(() => util.ipMatchFunc('abc', 'fe80::/10')).toThrow(Error);
+  expect(() => util.ipMatchFunc('abc', '2001:db8::/32')).toThrow(Error);
+  expect(() => util.ipMatchFunc('abc', 'fd00::/8')).toThrow(Error);
+  expect(() => util.ipMatchFunc('', '::1/128')).toThrow(Error);
+});
+
+test('test ip.isV4Format - octet range validation', () => {
+  // Valid addresses
+  expect(ip.isV4Format('0.0.0.0')).toEqual(true);
+  expect(ip.isV4Format('255.255.255.255')).toEqual(true);
+  expect(ip.isV4Format('192.168.1.1')).toEqual(true);
+  expect(ip.isV4Format('10.0.0.1')).toEqual(true);
+
+  // Overflowed octets must be rejected
+  expect(ip.isV4Format('256.0.0.1')).toEqual(false);
+  expect(ip.isV4Format('448.168.2.10')).toEqual(false);
+  expect(ip.isV4Format('266.0.0.1')).toEqual(false);
+  expect(ip.isV4Format('0.0.0.256')).toEqual(false);
+  expect(ip.isV4Format('999.999.999.999')).toEqual(false);
+});
+
+test('test ip.isV6Format - rejects non-IPv6 strings', () => {
+  // Valid IPv6 addresses
+  expect(ip.isV6Format('::1')).toEqual(true);
+  expect(ip.isV6Format('fe80::1')).toEqual(true);
+  expect(ip.isV6Format('2001:db8::')).toEqual(true);
+  expect(ip.isV6Format('::')).toEqual(true);
+
+  // Non-IPv6 strings must be rejected (no colon present)
+  expect(ip.isV6Format('abc')).toEqual(false);
+  expect(ip.isV6Format('a')).toEqual(false);
+  expect(ip.isV6Format('')).toEqual(false);
+  expect(ip.isV6Format('192.168.1.1')).toEqual(false);
+});
+
+test('test ip.cidrSubnet - IPv6 short prefixes use 16-byte mask', () => {
+  // /8, /10, /32 on IPv6 previously returned a 4-byte IPv4 mask
+  expect(ip.cidrSubnet('fd00::/8').contains('fd00::1')).toEqual(true);
+  expect(ip.cidrSubnet('fd00::/8').contains('fe80::1')).toEqual(false);
+  expect(ip.cidrSubnet('fe80::/10').contains('fe80::1')).toEqual(true);
+  expect(ip.cidrSubnet('fe80::/10').contains('::1')).toEqual(false);
+  expect(ip.cidrSubnet('2001:db8::/32').contains('2001:db8::1')).toEqual(true);
+  expect(ip.cidrSubnet('2001:db8::/32').contains('2001:db9::1')).toEqual(false);
+  // Invalid input must not match
+  expect(ip.cidrSubnet('::1/128').contains('abc')).toEqual(false);
+  expect(ip.cidrSubnet('::1/128').contains('')).toEqual(false);
 });
 
 test('test globMatch', () => {
