@@ -57,8 +57,7 @@ export class DefaultFilteredAdapter extends FileAdapter implements FilteredAdapt
     if (this.filtered) {
       throw new Error('cannot save a filtered policy');
     }
-    await super.savePolicy(model);
-    return true;
+    return super.savePolicy(model);
   }
 
   private static filterLine(line: string, filter: Filter): boolean {

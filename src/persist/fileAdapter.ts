@@ -53,28 +53,26 @@ export class FileAdapter implements Adapter {
     let result = '';
 
     const pList = model.model.get('p');
-    if (!pList) {
-      return false;
-    }
-    pList.forEach((n) => {
-      n.policy.forEach((m) => {
-        result += n.key + ', ';
-        result += arrayToString(m);
-        result += '\n';
+    if (pList) {
+      pList.forEach((n) => {
+        n.policy.forEach((m) => {
+          result += n.key + ', ';
+          result += arrayToString(m);
+          result += '\n';
+        });
       });
-    });
+    }
 
     const gList = model.model.get('g');
-    if (!gList) {
-      return false;
-    }
-    gList.forEach((n) => {
-      n.policy.forEach((m) => {
-        result += n.key + ', ';
-        result += arrayToString(m.map((element) => this.escapeCsv(element)));
-        result += '\n';
+    if (gList) {
+      gList.forEach((n) => {
+        n.policy.forEach((m) => {
+          result += n.key + ', ';
+          result += arrayToString(m.map((element) => this.escapeCsv(element)));
+          result += '\n';
+        });
       });
-    });
+    }
 
     await this.savePolicyFile(result.trim());
     return true;
