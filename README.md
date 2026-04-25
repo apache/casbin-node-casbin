@@ -1,8 +1,8 @@
 # Node-Casbin
 
-[![GitHub Actions](https://github.com/casbin/node-casbin/workflows/main/badge.svg)](https://github.com/casbin/node-casbin/actions)
-[![Coverage Status](https://coveralls.io/repos/github/casbin/node-casbin/badge.svg?branch=master)](https://coveralls.io/github/casbin/node-casbin?branch=master)
-[![Release](https://img.shields.io/github/release/casbin/node-casbin.svg)](https://github.com/casbin/node-casbin/releases/latest)
+[![GitHub Actions](https://github.com/apache/casbin-node-casbin/workflows/main/badge.svg)](https://github.com/apache/casbin-node-casbin/actions)
+[![Coverage Status](https://coveralls.io/repos/github/apache/casbin-node-casbin/badge.svg?branch=master)](https://coveralls.io/github/apache/casbin-node-casbin?branch=master)
+[![Release](https://img.shields.io/github/release/apache/casbin-node-casbin.svg)](https://github.com/apache/casbin-node-casbin/releases/latest)
 [![NPM version][npm-image]][npm-url]
 [![NPM download][download-image]][download-url]
 [![install size](https://packagephobia.now.sh/badge?p=casbin)](https://packagephobia.now.sh/result?p=casbin)
@@ -13,7 +13,7 @@
 [download-image]: https://img.shields.io/npm/dm/casbin.svg?style=flat-square
 [download-url]: https://npmjs.org/package/casbin
 
-**News**: still worry about how to write the correct `node-casbin` policy? [Casbin online editor](http://casbin.org/editor) is coming to help!
+**News**: still worry about how to write the correct `node-casbin` policy? [Casbin online editor](https://casbin.apache.org/editor) is coming to help!
 
 ![casbin Logo](casbin-logo.png)
 
@@ -21,19 +21,19 @@
 
 ## All the languages supported by Casbin:
 
-| [![golang](https://casbin.org/img/langs/golang.png)](https://github.com/casbin/casbin) | [![java](https://casbin.org/img/langs/java.png)](https://github.com/casbin/jcasbin) | [![nodejs](https://casbin.org/img/langs/nodejs.png)](https://github.com/casbin/node-casbin) | [![php](https://casbin.org/img/langs/php.png)](https://github.com/php-casbin/php-casbin) |
-| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| [Casbin](https://github.com/casbin/casbin)                                             | [jCasbin](https://github.com/casbin/jcasbin)                                        | [node-Casbin](https://github.com/casbin/node-casbin)                                        | [PHP-Casbin](https://github.com/php-casbin/php-casbin)                                   |
-| production-ready                                                                       | production-ready                                                                    | production-ready                                                                            | production-ready                                                                         |
+| [![golang](https://casbin.apache.org/img/langs/golang.png)](https://github.com/casbin/casbin) | [![java](https://casbin.apache.org/img/langs/java.png)](https://github.com/casbin/jcasbin) | [![nodejs](https://casbin.apache.org/img/langs/nodejs.png)](https://github.com/apache/casbin-node-casbin) | [![php](https://casbin.apache.org/img/langs/php.png)](https://github.com/php-casbin/php-casbin) |
+| --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| [Casbin](https://github.com/casbin/casbin)                                                    | [jCasbin](https://github.com/casbin/jcasbin)                                               | [node-Casbin](https://github.com/apache/casbin-node-casbin)                                               | [PHP-Casbin](https://github.com/php-casbin/php-casbin)                                          |
+| production-ready                                                                              | production-ready                                                                           | production-ready                                                                                          | production-ready                                                                                |
 
-| [![python](https://casbin.org/img/langs/python.png)](https://github.com/casbin/pycasbin) | [![dotnet](https://casbin.org/img/langs/dotnet.png)](https://github.com/casbin-net/Casbin.NET) | [![c++](https://casbin.org/img/langs/cpp.png)](https://github.com/casbin/casbin-cpp) | [![rust](https://casbin.org/img/langs/rust.png)](https://github.com/casbin/casbin-rs) |
-| ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| [PyCasbin](https://github.com/casbin/pycasbin)                                           | [Casbin.NET](https://github.com/casbin-net/Casbin.NET)                                         | [Casbin-CPP](https://github.com/casbin/casbin-cpp)                                   | [Casbin-RS](https://github.com/casbin/casbin-rs)                                      |
-| production-ready                                                                         | production-ready                                                                               | beta-test                                                                            | production-ready                                                                      |
+| [![python](https://casbin.apache.org/img/langs/python.png)](https://github.com/casbin/pycasbin) | [![dotnet](https://casbin.apache.org/img/langs/dotnet.png)](https://github.com/casbin-net/Casbin.NET) | [![c++](https://casbin.apache.org/img/langs/cpp.png)](https://github.com/casbin/casbin-cpp) | [![rust](https://casbin.apache.org/img/langs/rust.png)](https://github.com/casbin/casbin-rs) |
+| ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| [PyCasbin](https://github.com/casbin/pycasbin)                                                  | [Casbin.NET](https://github.com/casbin-net/Casbin.NET)                                                | [Casbin-CPP](https://github.com/casbin/casbin-cpp)                                          | [Casbin-RS](https://github.com/casbin/casbin-rs)                                             |
+| production-ready                                                                                | production-ready                                                                                      | beta-test                                                                                   | production-ready                                                                             |
 
 ## Documentation
 
-https://casbin.org/docs/overview
+https://casbin.apache.org/docs/overview
 
 ## Installation
 
@@ -92,33 +92,33 @@ See [Policy management APIs](#policy-management) for more usage.
 
 Casbin provides two sets of APIs to manage permissions:
 
-- [Management API](https://casbin.org/docs/management-api): the primitive API that provides full support for Casbin policy management.
-- [RBAC API](https://casbin.org/docs/rbac-api): a more friendly API for RBAC. This API is a subset of Management API. The RBAC users could use this API to simplify the code.
+- [Management API](https://casbin.apache.org/docs/management-api): the primitive API that provides full support for Casbin policy management.
+- [RBAC API](https://casbin.apache.org/docs/rbac-api): a more friendly API for RBAC. This API is a subset of Management API. The RBAC users could use this API to simplify the code.
 
 ## Official Model
 
-https://casbin.org/docs/supported-models
+https://casbin.apache.org/docs/supported-models
 
 ## Policy persistence
 
-https://casbin.org/docs/adapters
+https://casbin.apache.org/docs/adapters
 
 ## Policy consistence between multiple nodes
 
-https://casbin.org/docs/watchers
+https://casbin.apache.org/docs/watchers
 
 ## Role manager
 
-https://casbin.org/docs/role-managers
+https://casbin.apache.org/docs/role-managers
 
 ## Contributors
 
 This project exists thanks to all the people who contribute.
-<a href="https://github.com/casbin/node-casbin/graphs/contributors"><img src="https://opencollective.com/node-casbin/contributors.svg?width=890&button=false" /></a>
+<a href="https://github.com/apache/casbin-node-casbin/graphs/contributors"><img src="https://opencollective.com/node-casbin/contributors.svg?width=890&button=false" /></a>
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=casbin/node-casbin&type=Date)](https://star-history.com/#casbin/node-casbin&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=apache/casbin-node-casbin&type=Date)](https://star-history.com/#apache/casbin-node-casbin&Date)
 
 ## License
 
@@ -127,5 +127,6 @@ This project is licensed under the [Apache 2.0 license](LICENSE).
 ## Contact
 
 If you have any issues or feature requests, please contact us. PR is welcomed.
-- https://github.com/casbin/node-casbin/issues
+
+- https://github.com/apache/casbin-node-casbin/issues
 - https://discord.gg/S5UjpzGZjN

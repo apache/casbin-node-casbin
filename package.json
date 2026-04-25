@@ -57,10 +57,10 @@
     "lib",
     "examples"
   ],
-  "homepage": "http://casbin.org",
+  "homepage": "https://casbin.apache.org",
   "repository": {
     "type": "git",
-    "url": "https://github.com/casbin/node-casbin.git"
+    "url": "https://github.com/apache/casbin-node-casbin.git"
   },
   "license": "Apache-2.0",
   "husky": {
