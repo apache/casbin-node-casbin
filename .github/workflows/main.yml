@@ -21,12 +21,12 @@ jobs:
       - run: yarn lint
       - run: yarn test
       - run: yarn coverage
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          flag-name: run-${{ matrix.node-version }}
-          parallel: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: node-${{ matrix.node-version }}
+          fail_ci_if_error: false
 
   semantic-release:
     needs: [test]
@@ -40,13 +40,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-  finish:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Coveralls Finished
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.github_token }}
-          parallel-finished: true

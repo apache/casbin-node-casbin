@@ -1,7 +1,7 @@
 # Node-Casbin
 
 [![GitHub Actions](https://github.com/apache/casbin-node-casbin/workflows/main/badge.svg)](https://github.com/apache/casbin-node-casbin/actions)
-[![Coverage Status](https://coveralls.io/repos/github/apache/casbin-node-casbin/badge.svg?branch=master)](https://coveralls.io/github/apache/casbin-node-casbin?branch=master)
+[![Coverage Status](https://codecov.io/gh/apache/casbin-node-casbin/branch/master/graph/badge.svg)](https://codecov.io/gh/apache/casbin-node-casbin)
 [![Release](https://img.shields.io/github/release/apache/casbin-node-casbin.svg)](https://github.com/apache/casbin-node-casbin/releases/latest)
 [![NPM version][npm-image]][npm-url]
 [![NPM download][download-image]][download-url]
