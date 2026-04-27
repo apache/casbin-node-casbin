@@ -20,6 +20,7 @@ import { getLogger, logPrint } from '../log';
 import { DefaultRoleManager } from '../rbac';
 import { EffectExpress, FieldIndex } from '../constants';
 import { FileSystem } from '../persist/fileSystem';
+import { ValidatorEnforcer } from '../validatorEnforcer';
 
 const defaultDomain = '';
 const defaultSeparator = '::';
@@ -108,10 +109,7 @@ export class Model {
         value = value.replace(`$<${index}>`, n);
       });
 
-      const invalidOperators = /(?<![&|])&(?!&)|(?<![&|])\|(?!\|)|&{3,}|\|{3,}/g;
-      if (invalidOperators.test(value)) {
-        throw new Error(`Invalid operator in matcher`);
-      }
+      ValidatorEnforcer.validateMatcherOperators(value);
 
       ast.value = value;
     } else {
@@ -164,16 +162,7 @@ export class Model {
       this.loadSection(cfg, s);
     }
 
-    const ms: string[] = [];
-    requiredSections.forEach((n) => {
-      if (!this.hasSection(n)) {
-        ms.push(sectionNameMap[n]);
-      }
-    });
-
-    if (ms.length > 0) {
-      throw new Error(`missing required sections: ${ms.join(',')}`);
-    }
+    ValidatorEnforcer.validateRequiredSections(this.model);
   }
 
   private hasSection(sec: string): boolean {
@@ -317,13 +306,8 @@ export class Model {
     const priorityIndex = ast.tokens.indexOf(`${ptype}_priority`);
 
     if (priorityIndex !== -1) {
-      if (oldRule[priorityIndex] === newRule[priorityIndex]) {
-        ast.policy[index] = newRule;
-      } else {
-        // this.removePolicy(sec, ptype, oldRule);
-        // this.addPolicy(sec, ptype, newRule);
-        throw new Error('new rule should have the same priority with old rule.');
-      }
+      ValidatorEnforcer.validatePolicyPriority(oldRule, newRule, priorityIndex);
+      ast.policy[index] = newRule;
     } else {
       ast.policy[index] = newRule;
     }
@@ -594,14 +578,14 @@ export class Model {
 export function newModel(...text: string[]): Model {
   const m = new Model();
 
+  ValidatorEnforcer.validateModelParameters(text.length);
+
   if (text.length === 2) {
     if (text[0] !== '') {
       m.loadModelFromFile(text[0]);
     }
   } else if (text.length === 1) {
     m.loadModelFromText(text[0]);
-  } else if (text.length !== 0) {
-    throw new Error('Invalid parameters for model.');
   }
 
   return m;
