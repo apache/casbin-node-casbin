@@ -1,0 +1,25 @@
+p, abstract_role1, *, devis, read
+p, abstract_role1, *, devis, create
+
+p, abstract_role2, *, devis, read
+p, abstract_role2, *, organization, read
+p, abstract_role2, *, organization, write
+
+g, role1, abstract_role1, tenant1
+g, role1, abstract_role1, tenant2
+g, role1, abstract_role1, tenant3
+
+g, role2, abstract_role2, tenant1
+g, role2, abstract_role2, tenant2
+g, role2, abstract_role2, tenant3
+
+g, super_user, abstract_role2, *
+
+g, michael, role1, tenant1
+g, antoine, role1, tenant2
+g, kevin, role1, tenant3
+
+g, thomas, role2, tenant1
+g, lucie, role2, tenant3
+
+g, theo, super_user, *

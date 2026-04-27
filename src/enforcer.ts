@@ -329,6 +329,7 @@ export class Enforcer extends ManagementEnforcer {
     let n: string | undefined;
     while ((n = q.shift()) !== undefined) {
       for (const rm of this.rmMap.values()) {
+        // Get roles for the specific domain
         const role = await rm.getRoles(n, ...domain);
         role.forEach((r) => {
           if (!res.has(r)) {
@@ -336,6 +337,19 @@ export class Enforcer extends ManagementEnforcer {
             q.push(r);
           }
         });
+
+        // Also get roles with wildcard domain '*' if domain is provided and not already '*'
+        if (domain && domain.length > 0 && domain[0] !== '*') {
+          const wildcardDomain = [...domain];
+          wildcardDomain[0] = '*';
+          const wildcardRole = await rm.getRoles(n, ...wildcardDomain);
+          wildcardRole.forEach((r) => {
+            if (!res.has(r)) {
+              res.add(r);
+              q.push(r);
+            }
+          });
+        }
       }
     }
 
@@ -361,8 +375,17 @@ export class Enforcer extends ManagementEnforcer {
 
     for (const n of roles) {
       if (withDomain) {
+        // Get policies matching the specific domain
         const p = await this.getFilteredPolicy(0, n, ...domain);
         res.push(...p);
+
+        // Also get policies with wildcard domain '*' if the domain is not already '*'
+        if (domain[0] !== '*') {
+          const wildcardDomain = [...domain];
+          wildcardDomain[0] = '*';
+          const wildcardP = await this.getFilteredPolicy(0, n, ...wildcardDomain);
+          res.push(...wildcardP);
+        }
       } else {
         const p = await this.getPermissionsForUser(n);
         res.push(...p);
