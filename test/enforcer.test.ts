@@ -753,6 +753,42 @@ test('TestSubjectPriority', async () => {
   testEnforceEx(e, 'alice', 'data1', 'read', [true, ['alice', 'data1', 'read', 'allow']]);
 });
 
+test('TestSubjectPriority with CSV converted to addPolicy/addGroupingPolicy', async () => {
+  const e = await newEnforcer('examples/subject_priority_model.conf');
+
+  await e.addPolicy('root', 'data1', 'read', 'deny');
+  await e.addPolicy('admin', 'data1', 'read', 'deny');
+  await e.addPolicy('editor', 'data1', 'read', 'deny');
+  await e.addPolicy('subscriber', 'data1', 'read', 'deny');
+  await e.addPolicy('jane', 'data1', 'read', 'allow');
+  await e.addPolicy('alice', 'data1', 'read', 'allow');
+
+  await e.addGroupingPolicy('admin', 'root');
+  await e.addGroupingPolicy('editor', 'admin');
+  await e.addGroupingPolicy('subscriber', 'admin');
+  await e.addGroupingPolicy('jane', 'editor');
+  await e.addGroupingPolicy('alice', 'subscriber');
+
+  testEnforceEx(e, 'jane', 'data1', 'read', [true, ['jane', 'data1', 'read', 'allow']]);
+  testEnforceEx(e, 'alice', 'data1', 'read', [true, ['alice', 'data1', 'read', 'allow']]);
+});
+
+test('TestSubjectPriority simpler with CSV', async () => {
+  const e = await newEnforcer('examples/subject_priority_model.conf', 'examples/subject_priority_policy_simple.csv');
+
+  testEnforceEx(e, 'user', 'data1', 'read', [true, ['user', 'data1', 'read', 'allow']]);
+});
+
+test('TestSubjectPriority simpler with addPolicy', async () => {
+  const e = await newEnforcer('examples/subject_priority_model.conf');
+
+  await e.addPolicy('group', 'data1', 'read', 'deny');
+  await e.addPolicy('user', 'data1', 'read', 'allow');
+  await e.addGroupingPolicy('user', 'group');
+
+  testEnforceEx(e, 'user', 'data1', 'read', [true, ['user', 'data1', 'read', 'allow']]);
+});
+
 test('TestSubjectPriorityWithDomain', async () => {
   const e = await newEnforcer('examples/subject_priority_model_with_domain.conf', 'examples/subject_priority_policy_with_domain.csv');
   testEnforceEx(e, 'alice', 'data1', 'write', [true, ['alice', 'data1', 'domain1', 'write', 'allow']], 'domain1');

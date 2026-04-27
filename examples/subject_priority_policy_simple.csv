@@ -1,0 +1,3 @@
+p, group, data1, read, deny
+p, user, data1, read, allow
+g, user, group
