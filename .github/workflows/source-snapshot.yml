@@ -41,7 +41,7 @@ permissions:
 jobs:
   source-snapshot:
     name: Source Snapshot
-    if: ${{ github.repository == 'apache/casbin-node-casbin' }}
+    if: ${{ github.repository == 'cooronx/casbin-node-casbin' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
