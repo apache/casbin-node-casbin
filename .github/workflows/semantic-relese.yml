@@ -1,0 +1,121 @@
+name: semantic-relese
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+      basename:
+        required: true
+        type: string
+      previous_tag:
+        required: false
+        type: string
+        default: ""
+      ref:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      version:
+        description: GitHub release tag, for example v1.2.3-snapshot.1
+        required: true
+        type: string
+      basename:
+        description: Source archive basename, for example casbin-1.2.3-snapshot.1-src
+        required: true
+        type: string
+      previous_tag:
+        description: Previous tag for release notes
+        required: false
+        type: string
+      ref:
+        description: Git ref or commit SHA for the snapshot
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  semantic-relese:
+    name: semantic-relese
+    if: ${{ github.repository == 'apache/casbin-node-casbin' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref }}
+
+      - name: Generate snapshot release notes
+        run: |
+          PREVIOUS_TAG="${{ inputs.previous_tag }}"
+          CURRENT_TAG="${{ inputs.version }}"
+          CURRENT_VERSION="${CURRENT_TAG#v}"
+          RELEASE_DATE="$(date -u +%F)"
+          RANGE="HEAD"
+
+          if [ -n "${PREVIOUS_TAG}" ]; then
+            RANGE="${PREVIOUS_TAG}..HEAD"
+          fi
+
+          FEATURES="$(git log --pretty=format:'%s (%h)' "${RANGE}" | grep -Ei '^(feat)(\(.+\))?: ' || true)"
+          FIXES="$(git log --pretty=format:'%s (%h)' "${RANGE}" | grep -Ei '^(fix)(\(.+\))?: ' || true)"
+          DOCS="$(git log --pretty=format:'%s (%h)' "${RANGE}" | grep -Ei '^(docs?|doc)(\(.+\))?: ' || true)"
+
+          {
+            if [ -n "${PREVIOUS_TAG}" ]; then
+              echo "# [${CURRENT_VERSION}](https://github.com/${GITHUB_REPOSITORY}/compare/${PREVIOUS_TAG}...${CURRENT_TAG}) (${RELEASE_DATE})"
+            else
+              echo "# ${CURRENT_VERSION} (${RELEASE_DATE})"
+            fi
+            echo
+            if [ -n "${FEATURES}" ]; then
+              echo "## Features"
+              echo
+              printf '%s\n' "${FEATURES}" | sed 's/^/- /'
+              echo
+            fi
+
+            if [ -n "${FIXES}" ]; then
+              echo "## Fixes"
+              echo
+              printf '%s\n' "${FIXES}" | sed 's/^/- /'
+              echo
+            fi
+
+            if [ -n "${DOCS}" ]; then
+              echo "## Docs"
+              echo
+              printf '%s\n' "${DOCS}" | sed 's/^/- /'
+              echo
+            fi
+
+            if [ -z "${FEATURES}${FIXES}${DOCS}" ]; then
+              echo "## Notes"
+              echo
+              echo "- No feat/fix/doc commits were found in this snapshot range."
+            fi
+          } > SNAPSHOT_RELEASE_NOTES.md
+
+      - name: Create source archives
+        run: |
+          mkdir -p dist
+          git archive --format=tar.gz --prefix="${{ inputs.basename }}/" -o "dist/${{ inputs.basename }}.tar.gz" HEAD
+          git archive --format=zip --prefix="${{ inputs.basename }}/" -o "dist/${{ inputs.basename }}.zip" HEAD
+
+      - name: Create source snapshot release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.version }}
+          target_commitish: ${{ inputs.ref }}
+          name: ${{ inputs.version }}
+          body_path: SNAPSHOT_RELEASE_NOTES.md
+          draft: false
+          prerelease: false
+          files: |
+            dist/${{ inputs.basename }}.tar.gz
+            dist/${{ inputs.basename }}.zip
