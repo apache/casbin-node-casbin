@@ -1,0 +1,50 @@
+name: Publish NPM
+
+on:
+  workflow_call:
+    inputs:
+      npm_version:
+        required: true
+        type: string
+      ref:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      npm_version:
+        description: NPM snapshot version to publish, for example 1.2.3-snapshot.1
+        required: true
+        type: string
+      ref:
+        description: Git ref or commit SHA to publish
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish-npm:
+    name: Publish NPM
+    if: ${{ github.repository == 'apache/casbin-node-casbin' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Publish snapshot package
+        run: |
+          yarn install --frozen-lockfile
+          npm version "${{ inputs.npm_version }}" --no-git-tag-version
+          npm publish --tag snapshot
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
