@@ -606,7 +606,7 @@ test('test ABAC multiple eval()', async () => {
   await testEnforce(e, 78, (34 as unknown) as string, 'read', false);
 });
 
-// https://github.com/apache/casbin-node-casbin/issues/438
+// https://github.com/cooronx/casbin-node-casbin/issues/438
 test('test ABAC single eval() with r. in unexpected places', async () => {
   const m = newModel();
   m.addDef('r', 'r', 'sub, obj, act');

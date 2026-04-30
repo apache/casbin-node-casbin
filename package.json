@@ -59,7 +59,7 @@
   "homepage": "https://casbin.apache.org",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apache/casbin-node-casbin.git"
+    "url": "https://github.com/cooronx/casbin-node-casbin.git"
   },
   "license": "Apache-2.0",
   "husky": {

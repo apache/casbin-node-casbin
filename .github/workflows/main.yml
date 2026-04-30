@@ -33,7 +33,7 @@ jobs:
     needs: [test]
     if: >-
       ${{
-        github.repository == 'apache/casbin-node-casbin' &&
+        github.repository == 'cooronx/casbin-node-casbin' &&
         github.event_name == 'push' &&
         github.ref == 'refs/heads/master'
       }}
@@ -100,7 +100,7 @@ jobs:
     needs: prepare_snapshot_version
     if: >-
       ${{
-        github.repository == 'apache/casbin-node-casbin' &&
+        github.repository == 'cooronx/casbin-node-casbin' &&
         github.event_name == 'push' &&
         github.ref == 'refs/heads/master'
       }}
@@ -117,7 +117,7 @@ jobs:
       - publish-npm
     if: >-
       ${{
-        github.repository == 'apache/casbin-node-casbin' &&
+        github.repository == 'cooronx/casbin-node-casbin' &&
         github.event_name == 'push' &&
         github.ref == 'refs/heads/master'
       }}

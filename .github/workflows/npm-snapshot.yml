@@ -26,7 +26,7 @@ permissions:
 jobs:
   publish-npm:
     name: Publish NPM
-    if: ${{ github.repository == 'apache/casbin-node-casbin' }}
+    if: ${{ github.repository == 'cooronx/casbin-node-casbin' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

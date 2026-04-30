@@ -1,8 +1,8 @@
 # Node-Casbin
 
-[![GitHub Actions](https://github.com/apache/casbin-node-casbin/workflows/main/badge.svg)](https://github.com/apache/casbin-node-casbin/actions)
-[![Coverage Status](https://codecov.io/gh/apache/casbin-node-casbin/branch/master/graph/badge.svg)](https://codecov.io/gh/apache/casbin-node-casbin)
-[![Release](https://img.shields.io/github/release/apache/casbin-node-casbin.svg)](https://github.com/apache/casbin-node-casbin/releases/latest)
+[![GitHub Actions](https://github.com/cooronx/casbin-node-casbin/workflows/main/badge.svg)](https://github.com/cooronx/casbin-node-casbin/actions)
+[![Coverage Status](https://codecov.io/gh/cooronx/casbin-node-casbin/branch/master/graph/badge.svg)](https://codecov.io/gh/cooronx/casbin-node-casbin)
+[![Release](https://img.shields.io/github/release/cooronx/casbin-node-casbin.svg)](https://github.com/cooronx/casbin-node-casbin/releases/latest)
 [![NPM version][npm-image]][npm-url]
 [![NPM download][download-image]][download-url]
 [![install size](https://packagephobia.now.sh/badge?p=casbin)](https://packagephobia.now.sh/result?p=casbin)
@@ -21,9 +21,9 @@
 
 ## All the languages supported by Casbin:
 
-| [![golang](https://casbin.apache.org/img/langs/golang.png)](https://github.com/casbin/casbin) | [![java](https://casbin.apache.org/img/langs/java.png)](https://github.com/casbin/jcasbin) | [![nodejs](https://casbin.apache.org/img/langs/nodejs.png)](https://github.com/apache/casbin-node-casbin) | [![php](https://casbin.apache.org/img/langs/php.png)](https://github.com/php-casbin/php-casbin) |
+| [![golang](https://casbin.apache.org/img/langs/golang.png)](https://github.com/casbin/casbin) | [![java](https://casbin.apache.org/img/langs/java.png)](https://github.com/casbin/jcasbin) | [![nodejs](https://casbin.apache.org/img/langs/nodejs.png)](https://github.com/cooronx/casbin-node-casbin) | [![php](https://casbin.apache.org/img/langs/php.png)](https://github.com/php-casbin/php-casbin) |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| [Casbin](https://github.com/casbin/casbin)                                                    | [jCasbin](https://github.com/casbin/jcasbin)                                               | [node-Casbin](https://github.com/apache/casbin-node-casbin)                                               | [PHP-Casbin](https://github.com/php-casbin/php-casbin)                                          |
+| [Casbin](https://github.com/casbin/casbin)                                                    | [jCasbin](https://github.com/casbin/jcasbin)                                               | [node-Casbin](https://github.com/cooronx/casbin-node-casbin)                                               | [PHP-Casbin](https://github.com/php-casbin/php-casbin)                                          |
 | production-ready                                                                              | production-ready                                                                           | production-ready                                                                                          | production-ready                                                                                |
 
 | [![python](https://casbin.apache.org/img/langs/python.png)](https://github.com/casbin/pycasbin) | [![dotnet](https://casbin.apache.org/img/langs/dotnet.png)](https://github.com/casbin-net/Casbin.NET) | [![c++](https://casbin.apache.org/img/langs/cpp.png)](https://github.com/casbin/casbin-cpp) | [![rust](https://casbin.apache.org/img/langs/rust.png)](https://github.com/casbin/casbin-rs) |
@@ -114,11 +114,11 @@ https://casbin.apache.org/docs/role-managers
 ## Contributors
 
 This project exists thanks to all the people who contribute.
-<a href="https://github.com/apache/casbin-node-casbin/graphs/contributors"><img src="https://opencollective.com/node-casbin/contributors.svg?width=890&button=false" /></a>
+<a href="https://github.com/cooronx/casbin-node-casbin/graphs/contributors"><img src="https://opencollective.com/node-casbin/contributors.svg?width=890&button=false" /></a>
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=apache/casbin-node-casbin&type=Date)](https://star-history.com/#apache/casbin-node-casbin&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=cooronx/casbin-node-casbin&type=Date)](https://star-history.com/#cooronx/casbin-node-casbin&Date)
 
 ## License
 
@@ -128,5 +128,5 @@ This project is licensed under the [Apache 2.0 license](LICENSE).
 
 If you have any issues or feature requests, please contact us. PR is welcomed.
 
-- https://github.com/apache/casbin-node-casbin/issues
+- https://github.com/cooronx/casbin-node-casbin/issues
 - https://discord.gg/S5UjpzGZjN
