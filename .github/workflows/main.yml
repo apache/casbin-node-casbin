@@ -28,15 +28,104 @@ jobs:
           flags: node-${{ matrix.node-version }}
           fail_ci_if_error: false
 
-  semantic-release:
+  prepare_snapshot_version:
+    name: Prepare Snapshot Version
     needs: [test]
+    if: >-
+      ${{
+        github.repository == 'apache/casbin-node-casbin' &&
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/master'
+      }}
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.snapshot.outputs.version }}
+      npm_version: ${{ steps.snapshot.outputs.npm_version }}
+      basename: ${{ steps.snapshot.outputs.basename }}
+      previous_tag: ${{ steps.snapshot.outputs.previous_tag }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
 
-      - name: Run semantic-release
-        if: github.repository == 'apache/casbin-node-casbin' && github.event_name == 'push'
-        run: yarn install && yarn semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Compute snapshot version
+        id: snapshot
+        run: |
+          LATEST_RELEASE_TAG="$(
+            git tag --list 'v*' |
+              grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' |
+              sort -V |
+              tail -n 1
+          )"
+
+          if [ -z "${LATEST_RELEASE_TAG}" ]; then
+            BASE_VERSION="0.1.0"
+          else
+            RELEASE_VERSION="${LATEST_RELEASE_TAG#v}"
+            MAJOR="${RELEASE_VERSION%%.*}"
+            REST="${RELEASE_VERSION#*.}"
+            MINOR="${REST%%.*}"
+            NEXT_MINOR="$((MINOR + 1))"
+            BASE_VERSION="${MAJOR}.${NEXT_MINOR}.0"
+          fi
+
+          ESCAPED_BASE_VERSION="${BASE_VERSION//./\\.}"
+          LAST_SNAPSHOT_NUMBER="$(
+            git tag --list "v${BASE_VERSION}-snapshot.*" |
+              sed -nE "s/^v${ESCAPED_BASE_VERSION}-snapshot\.([0-9]+)$/\1/p" |
+              sort -n |
+              tail -n 1
+          )"
+          LAST_SNAPSHOT_NUMBER="${LAST_SNAPSHOT_NUMBER:-0}"
+          NEXT_SNAPSHOT_NUMBER="$((LAST_SNAPSHOT_NUMBER + 1))"
+          SNAPSHOT_VERSION="v${BASE_VERSION}-snapshot.${NEXT_SNAPSHOT_NUMBER}"
+          NPM_VERSION="${SNAPSHOT_VERSION#v}"
+          BASENAME="casbin-${NPM_VERSION}-src"
+
+          echo "version=${SNAPSHOT_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "npm_version=${NPM_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "basename=${BASENAME}" >> "${GITHUB_OUTPUT}"
+          if [ "${LAST_SNAPSHOT_NUMBER}" -gt 0 ]; then
+            echo "previous_tag=v${BASE_VERSION}-snapshot.${LAST_SNAPSHOT_NUMBER}" >> "${GITHUB_OUTPUT}"
+          else
+            echo "previous_tag=${LATEST_RELEASE_TAG}" >> "${GITHUB_OUTPUT}"
+          fi
+
+          echo "Computed snapshot version: ${SNAPSHOT_VERSION}"
+          echo "Computed npm version: ${NPM_VERSION}"
+
+  publish-npm:
+    name: Publish NPM
+    needs: prepare_snapshot_version
+    if: >-
+      ${{
+        github.repository == 'apache/casbin-node-casbin' &&
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/master'
+      }}
+    uses: ./.github/workflows/npm-snapshot.yml
+    with:
+      npm_version: ${{ needs.prepare_snapshot_version.outputs.npm_version }}
+      ref: ${{ github.sha }}
+    secrets: inherit
+
+  semantic-relese:
+    name: semantic-relese
+    needs:
+      - prepare_snapshot_version
+      - publish-npm
+    if: >-
+      ${{
+        github.repository == 'apache/casbin-node-casbin' &&
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/master'
+      }}
+    permissions:
+      contents: write
+    uses: ./.github/workflows/semantic-relese.yml
+    with:
+      version: ${{ needs.prepare_snapshot_version.outputs.version }}
+      basename: ${{ needs.prepare_snapshot_version.outputs.basename }}
+      previous_tag: ${{ needs.prepare_snapshot_version.outputs.previous_tag }}
+      ref: ${{ github.sha }}
