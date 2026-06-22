@@ -5,6 +5,14 @@
   "main": "lib/cjs/index.js",
   "typings": "lib/cjs/index.d.ts",
   "module": "lib/esm/index.js",
+  "exports": {
+    ".": {
+      "types": "./lib/cjs/index.d.ts",
+      "import": "./lib/esm/index.js",
+      "require": "./lib/cjs/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "prepack": "run-s lint test build",
     "postpack": "run-s clean",
