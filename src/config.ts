@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { FileSystem, mustGetDefaultFileSystem } from './persist';
+import { ValidatorEnforcer } from './validatorEnforcer';
 
 // ConfigInterface defines the behavior of a Config implementation
 export interface ConfigInterface {
@@ -140,7 +141,7 @@ export class Config implements ConfigInterface {
         }
         section = line.substring(1, line.length - 1);
         if (seenSections.has(section)) {
-          throw new Error(`Duplicated section: ${section} at line ${lineNumber}`);
+          ValidatorEnforcer.validateDuplicateSection(section, lineNumber);
         }
         seenSections.add(section);
       } else {
@@ -162,11 +163,16 @@ export class Config implements ConfigInterface {
   private write(section: string, lineNum: number, line: string): void {
     const equalIndex = line.indexOf('=');
     if (equalIndex === -1) {
-      throw new Error(`parse the content error : line ${lineNum}`);
+      ValidatorEnforcer.validateContentParse(lineNum);
     }
-    const key = line.substring(0, equalIndex);
-    const value = line.substring(equalIndex + 1);
-    this.addConfig(section, key.trim(), value.trim());
+    const key = line.substring(0, equalIndex).trim();
+    const value = line.substring(equalIndex + 1).trim();
+
+    if (section === 'matchers') {
+      ValidatorEnforcer.validateMatcher(value);
+    }
+
+    this.addConfig(section, key, value);
   }
 
   public getBool(key: string): boolean {
@@ -192,7 +198,7 @@ export class Config implements ConfigInterface {
 
   public set(key: string, value: string): void {
     if (!key) {
-      throw new Error('key is empty');
+      ValidatorEnforcer.validateEmptyKey();
     }
 
     let section = '';
