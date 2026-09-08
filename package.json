@@ -52,7 +52,7 @@
     "@casbin/expression-eval": "^5.3.0",
     "await-lock": "^2.0.1",
     "buffer": "^6.0.3",
-    "csv-parse": "^5.5.6",
+    "csv-parse": "^7.0.2",
     "minimatch": "^10.2.1"
   },
   "files": [
