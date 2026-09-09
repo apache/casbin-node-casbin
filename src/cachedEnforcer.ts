@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Enforcer, newEnforcerWithClass } from './enforcer';
+import { Enforcer, NewEnforcerParams, newEnforcerWithClass } from './enforcer';
 
 // CachedEnforcer wraps Enforcer and provides decision cache
 export class CachedEnforcer extends Enforcer {
@@ -75,6 +75,6 @@ export class CachedEnforcer extends Enforcer {
 }
 
 // newCachedEnforcer creates a cached enforcer via file or DB.
-export async function newCachedEnforcer(...params: any[]): Promise<CachedEnforcer> {
+export async function newCachedEnforcer(...params: NewEnforcerParams): Promise<CachedEnforcer> {
   return newEnforcerWithClass(CachedEnforcer, ...params);
 }

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Enforcer, newEnforcerWithClass } from './enforcer';
+import { Enforcer, NewEnforcerParams, newEnforcerWithClass } from './enforcer';
 import AwaitLock from 'await-lock';
 import { Watcher } from './persist';
 import { MatchingFunc } from './rbac';
@@ -526,6 +526,6 @@ export class SyncedEnforcer extends Enforcer {
 }
 
 // newSyncedEnforcer creates a synchronized enforcer via file or DB.
-export async function newSyncedEnforcer(...params: any[]): Promise<SyncedEnforcer> {
+export async function newSyncedEnforcer(...params: NewEnforcerParams): Promise<SyncedEnforcer> {
   return newEnforcerWithClass(SyncedEnforcer, ...params);
 }

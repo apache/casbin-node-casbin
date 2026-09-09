@@ -635,7 +635,30 @@ export class Enforcer extends ManagementEnforcer {
   }
 }
 
-export async function newEnforcerWithClass<T extends Enforcer>(enforcer: new () => T, ...params: any[]): Promise<T> {
+/**
+ * NewEnforcerParams is the list of argument combinations accepted by the enforcer factories
+ * (newEnforcer, newEnforcerWithClass, newCachedEnforcer and newSyncedEnforcer).
+ *
+ * The model always comes first, either as a path to a `.conf` file or as an already built Model.
+ * It can be followed by a policy source: a path to a `.csv` file (model file only) or an Adapter.
+ * A trailing boolean enables the logger, and additionally acts as the `lazyLoad` flag when a model
+ * file path is combined with an adapter.
+ */
+export type NewEnforcerParams =
+  | []
+  | [enableLog: boolean]
+  | [modelPath: string]
+  | [modelPath: string, enableLog: boolean]
+  | [modelPath: string, policyPath: string]
+  | [modelPath: string, policyPath: string, enableLog: boolean]
+  | [modelPath: string, adapter: Adapter]
+  | [modelPath: string, adapter: Adapter, lazyLoadAndEnableLog: boolean]
+  | [model: Model]
+  | [model: Model, enableLog: boolean]
+  | [model: Model, adapter: Adapter]
+  | [model: Model, adapter: Adapter, enableLog: boolean];
+
+export async function newEnforcerWithClass<T extends Enforcer>(enforcer: new () => T, ...params: NewEnforcerParams): Promise<T> {
   // inject the FS
   if (!getDefaultFileSystem()) {
     try {
@@ -656,36 +679,39 @@ export async function newEnforcerWithClass<T extends Enforcer>(enforcer: new () 
 
   const e = new enforcer();
 
+  // NewEnforcerParams already constrains the shape, index it loosely while dispatching
+  const args: any[] = params;
+
   let parsedParamLen = 0;
-  if (params.length >= 1) {
-    const enableLog = params[params.length - 1];
+  if (args.length >= 1) {
+    const enableLog = args[args.length - 1];
     if (typeof enableLog === 'boolean') {
       getLogger().enableLog(enableLog);
       parsedParamLen++;
     }
   }
 
-  if (params.length - parsedParamLen === 2) {
-    if (typeof params[0] === 'string') {
-      if (typeof params[1] === 'string') {
-        await e.initWithFile(params[0].toString(), params[1].toString());
+  if (args.length - parsedParamLen === 2) {
+    if (typeof args[0] === 'string') {
+      if (typeof args[1] === 'string') {
+        await e.initWithFile(args[0].toString(), args[1].toString());
       } else {
-        await e.initWithAdapter(params[0].toString(), params[1], params[2] === true);
+        await e.initWithAdapter(args[0].toString(), args[1], args[2] === true);
       }
     } else {
-      if (typeof params[1] === 'string') {
+      if (typeof args[1] === 'string') {
         throw new Error('Invalid parameters for enforcer.');
       } else {
-        await e.initWithModelAndAdapter(params[0], params[1]);
+        await e.initWithModelAndAdapter(args[0], args[1]);
       }
     }
-  } else if (params.length - parsedParamLen === 1) {
-    if (typeof params[0] === 'string') {
-      await e.initWithFile(params[0], '');
+  } else if (args.length - parsedParamLen === 1) {
+    if (typeof args[0] === 'string') {
+      await e.initWithFile(args[0], '');
     } else {
-      await e.initWithModelAndAdapter(params[0]);
+      await e.initWithModelAndAdapter(args[0]);
     }
-  } else if (params.length === parsedParamLen) {
+  } else if (args.length === parsedParamLen) {
     await e.initWithFile('', '');
   } else {
     throw new Error('Invalid parameters for enforcer.');
@@ -710,6 +736,6 @@ export async function newEnforcerWithClass<T extends Enforcer>(enforcer: new () 
  *
  * @param params
  */
-export async function newEnforcer(...params: any[]): Promise<Enforcer> {
+export async function newEnforcer(...params: NewEnforcerParams): Promise<Enforcer> {
   return newEnforcerWithClass(Enforcer, ...params);
 }
