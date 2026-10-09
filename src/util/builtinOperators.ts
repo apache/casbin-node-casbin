@@ -82,7 +82,11 @@ function keyMatch2(key1: string, key2: string): boolean {
     if (!key2.includes('/:')) {
       break;
     }
-    key2 = key2.replace(regexp, '$1[^/]+$2');
+    const replaced = key2.replace(regexp, '$1[^/]+$2');
+    if (replaced === key2) {
+      break;
+    }
+    key2 = replaced;
   }
 
   if (key2 === '*') {
@@ -140,7 +144,11 @@ function keyMatch3(key1: string, key2: string): boolean {
     if (!key2.includes('/{')) {
       break;
     }
-    key2 = key2.replace(regexp, '$1[^/]+$2');
+    const replaced = key2.replace(regexp, '$1[^/]+$2');
+    if (replaced === key2) {
+      break;
+    }
+    key2 = replaced;
   }
 
   return regexMatch(key1, '^' + key2 + '$');
@@ -180,7 +188,11 @@ function keyMatch4(key1: string, key2: string): boolean {
     if (!key2.includes('/{')) {
       break;
     }
-    key2 = key2.replace(regexp, '$1([^/]+)$2');
+    const replaced = key2.replace(regexp, '$1([^/]+)$2');
+    if (replaced === key2) {
+      break;
+    }
+    key2 = replaced;
   }
 
   regexp = new RegExp('^' + key2 + '$');
@@ -248,7 +260,11 @@ function KeyMatch5(key1: string, key2: string): boolean {
     if (!key2.includes('/{')) {
       break;
     }
-    key2 = key2.replace(regexp, '$1[^/]+$2');
+    const replaced = key2.replace(regexp, '$1[^/]+$2');
+    if (replaced === key2) {
+      break;
+    }
+    key2 = replaced;
   }
 
   return regexMatch(key1, '^' + key2 + '$');
@@ -286,7 +302,6 @@ function ipMatch(ip1: string, ip2: string): boolean {
     return ip.cidrSubnet(ip2).contains(ip1);
   } else {
     if (!(ip.isV4Format(ip2) || ip.isV6Format(ip2))) {
-      console.log(ip2);
       throw new Error('invalid argument: ip2 in ipMatch() function is not an IP address.');
     }
     return ip.isEqual(ip1, ip2);

@@ -192,6 +192,33 @@ test('test ipMatchFunc - non-IP strings are rejected as ip1', () => {
   expect(() => util.ipMatchFunc('', '::1/128')).toThrow(Error);
 });
 
+test('test ipMatchFunc - out-of-range CIDR prefix is rejected', () => {
+  expect(() => util.ipMatchFunc('8.8.8.8', '192.168.2.0/33')).toThrow(/invalid CIDR/);
+  expect(() => util.ipMatchFunc('192.168.2.50', '192.168.2.0/33')).toThrow(/invalid CIDR/);
+  expect(() => util.ipMatchFunc('8.8.8.8', '192.168.2.0/64')).toThrow(/invalid CIDR/);
+  expect(() => util.ipMatchFunc('8.8.8.8', '192.168.2.0/96')).toThrow(/invalid CIDR/);
+  expect(() => util.ipMatchFunc('8.8.8.8', '192.168.2.0/128')).toThrow(/invalid CIDR/);
+  expect(() => util.ipMatchFunc('::1', '::1/129')).toThrow(/invalid CIDR/);
+  expect(() => util.ipMatchFunc('8.8.8.8', '192.168.2.0/')).toThrow(/invalid CIDR/);
+  expect(() => util.ipMatchFunc('8.8.8.8', '192.168.2.0/-1')).toThrow(/invalid CIDR/);
+  expect(() => util.ipMatchFunc('8.8.8.8', '192.168.2.0/24abc')).toThrow(/invalid CIDR/);
+  expect(() => util.ipMatchFunc('8.8.8.8', 'abc/24')).toThrow(/invalid CIDR/);
+  expect(util.ipMatchFunc('8.8.8.8', '0.0.0.0/0')).toEqual(true);
+  expect(util.ipMatchFunc('192.168.2.1', '192.168.2.1/32')).toEqual(true);
+  expect(util.ipMatchFunc('192.168.2.2', '192.168.2.1/32')).toEqual(false);
+  expect(util.ipMatchFunc('2001:db8::1', '2001:db8::/64')).toEqual(true);
+  expect(util.ipMatchFunc('2001:db9::1', '2001:db8::/64')).toEqual(false);
+});
+
+test('test keyMatch functions return on patterns with an empty token', () => {
+  expect(util.keyMatch2Func('/foo/bar', '/foo/:')).toEqual(false);
+  expect(util.keyMatch2Func('/foo/bar', '/:/bar')).toEqual(false);
+  expect(util.keyMatch3Func('/foo/bar', '/foo/{}')).toEqual(false);
+  expect(util.keyMatch3Func('/foo/bar', '/foo/{')).toEqual(false);
+  expect(util.keyMatch5Func('/foo/bar', '/foo/{}')).toEqual(false);
+  expect(util.keyMatch4Func('/foo/bar', '/foo/{')).toEqual(false);
+});
+
 test('test ip.isV4Format - octet range validation', () => {
   // Valid addresses
   expect(ip.isV4Format('0.0.0.0')).toEqual(true);
