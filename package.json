@@ -1,7 +1,7 @@
 {
   "name": "casbin",
-  "version": "5.43.0",
-  "description": "An authorization library that supports access control models like ACL, RBAC, ABAC in Node.JS",
+  "version": "5.52.0",
+  "description": "Apache Casbin (Incubating): An authorization library that supports access control models like ACL, RBAC, ABAC in Node.JS",
   "main": "lib/cjs/index.js",
   "typings": "lib/cjs/index.d.ts",
   "module": "lib/esm/index.mjs",
@@ -52,12 +52,15 @@
     "@casbin/expression-eval": "^5.3.0",
     "await-lock": "^2.0.1",
     "buffer": "^6.0.3",
-    "csv-parse": "^5.5.6",
-    "minimatch": "^10.2.1"
+    "csv-parse": "^7.0.3",
+    "minimatch": "^10.2.6"
   },
   "files": [
     "lib",
-    "examples"
+    "examples",
+    "LICENSE",
+    "NOTICE",
+    "DISCLAIMER"
   ],
   "homepage": "https://casbin.apache.org",
   "repository": {

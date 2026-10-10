@@ -1,0 +1,97 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# Empty file; no creative content
+.gitattributes
+# Strict JSON metadata/configuration; covered by root legal files
+.prettierrc
+# Project-contributed logo; history reviewed separately
+casbin-logo.png
+# Policy fixture data: header would become a policy rule
+examples/abac_rule_effect_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/abac_rule_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/basic_inverse_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/basic_keyget2_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/basic_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/basic_without_resources_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/basic_without_users_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/glob_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/ipmatch_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/issues/node_casbin_150_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/keymatch2_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/keymatch_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/mulitple_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/multiple_policy_definitions_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/priority_indeterminate_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/priority_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/priority_policy_explicit.csv
+# Policy fixture data: header would become a policy rule
+examples/priority_policy_explicit_update.csv
+# Policy fixture data: header would become a policy rule
+examples/rbac_g2_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/rbac_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/rbac_with_all_pattern_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/rbac_with_deny_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/rbac_with_domain_pattern_in_policy_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/rbac_with_domain_pattern_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/rbac_with_domains_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/rbac_with_domains_policy2.csv
+# Policy fixture data: header would become a policy rule
+examples/rbac_with_hierarchical_domains_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/rbac_with_hierarchy_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/rbac_with_hierarchy_with_domains_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/rbac_with_multiple_policy_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/rbac_with_pattern_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/rbac_with_resource_roles_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/subject_priority_policy.csv
+# Policy fixture data: header would become a policy rule
+examples/subject_priority_policy_simple.csv
+# Policy fixture data: header would become a policy rule
+examples/subject_priority_policy_with_domain.csv
+# Strict JSON metadata/configuration; covered by root legal files
+package.json
+# Dependency-manager generated resolution data
+yarn.lock
