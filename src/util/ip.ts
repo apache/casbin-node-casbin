@@ -135,10 +135,10 @@ export const ip = {
   },
 
   fromPrefixLen: function (prefixlen: number, family?: string): string {
-    family = _normalizeFamily(typeof family === 'string' ? family : 'ipv4');
-    if (prefixlen > 32) {
-      family = 'ipv6';
+    if (typeof family !== 'string') {
+      family = prefixlen > 32 ? 'ipv6' : 'ipv4';
     }
+    family = _normalizeFamily(family);
 
     let len = 4;
     if (family === 'ipv6') {
@@ -237,7 +237,14 @@ export const ip = {
     const addr = cidrParts[0];
     if (cidrParts.length !== 2) throw new Error('invalid CIDR subnet: ' + addr);
 
+    if (!ip.isV4Format(addr) && !ip.isV6Format(addr)) {
+      throw new Error('invalid CIDR subnet: ' + cidrString);
+    }
     const family = ip.isV6Format(addr) ? 'ipv6' : 'ipv4';
+    const maxPrefixLen = family === 'ipv6' ? 128 : 32;
+    if (!/^\d+$/.test(cidrParts[1]) || parseInt(cidrParts[1], 10) > maxPrefixLen) {
+      throw new Error('invalid CIDR subnet: ' + cidrString);
+    }
     const mask = ip.fromPrefixLen(parseInt(cidrParts[1], 10), family);
 
     return ip.subnet(addr, mask);
