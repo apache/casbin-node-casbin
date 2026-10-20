@@ -13,7 +13,7 @@
 // limitations under the License.
 // noinspection JSMismatchedCollectionQueryUpdate
 
-import { DefaultRoleManager, Enforcer, newEnforcer, newModel } from '../src';
+import { DefaultRoleManager, Enforcer, newEnforcer, newModel, StringAdapter } from '../src';
 import { keyMatch2Func, keyMatch3Func, keyMatchFunc } from '../src/util';
 
 async function testEnforce(e: Enforcer, sub: string, obj: any, act: string, res: boolean): Promise<void> {
@@ -458,4 +458,21 @@ test('ABACModelWithInOperator', async () => {
   const rule2 = new TestRule2('alice', ['aa', 'bb']);
 
   await expect(e.enforce(rule1, rule2)).resolves.toBe(true);
+});
+
+test('InOperatorPrecedence', async () => {
+  const run = async (matcher: string, sub: string, obj: any): Promise<boolean> => {
+    const m = newModel();
+    m.addDef('r', 'r', 'sub, obj');
+    m.addDef('p', 'p', 'sub');
+    m.addDef('e', 'e', 'some(where (p.eft == allow))');
+    m.addDef('m', 'm', matcher);
+    return newEnforcer(m, new StringAdapter('p, admin')).then((e) => e.enforce(sub, obj));
+  };
+
+  await expect(run('r.sub == p.sub && r.obj.IsPublic in [false]', 'guest', { IsPublic: false })).resolves.toBe(false);
+  await expect(run('r.sub == p.sub && r.obj.IsPublic in [false]', 'admin', { IsPublic: false })).resolves.toBe(true);
+  await expect(run('r.sub == p.sub || r.obj.Name in ["a"]', 'admin', { Name: 'b' })).resolves.toBe(true);
+  await expect(run('r.sub == p.sub || r.obj.Name in ["a"]', 'guest', { Name: 'a' })).resolves.toBe(true);
+  await expect(run('r.sub == p.sub || r.obj.Name in ["a"]', 'guest', { Name: 'b' })).resolves.toBe(false);
 });

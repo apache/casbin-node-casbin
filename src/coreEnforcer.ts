@@ -82,7 +82,7 @@ export class CoreEnforcer {
   private getExpression(asyncCompile: boolean, exp: string): Matcher {
     const matcherKey = `${asyncCompile ? 'ASYNC[' : 'SYNC['}${exp}]`;
 
-    addBinaryOp('in', 1, customIn);
+    addBinaryOp('in', 6, customIn);
 
     let expression = this.matcherMap.get(matcherKey);
     if (!expression) {
