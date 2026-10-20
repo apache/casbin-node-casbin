@@ -367,4 +367,8 @@ test('test escapeAssertion', () => {
   // Test that patterns inside strings are not escaped
   expect(util.escapeAssertion('r.sub == "a.p.p.l.e"')).toEqual('r_sub == "a.p.p.l.e"');
   expect(util.escapeAssertion('r.sub == "test.p.value"')).toEqual('r_sub == "test.p.value"');
+  expect(util.escapeAssertion(`r.obj == 'https://p.example.com' && p.sub == r.sub`)).toEqual(
+    `r_obj == 'https://p.example.com' && p_sub == r_sub`
+  );
+  expect(util.escapeAssertion(`r.obj == "a\\"/p.b" || p.obj == '/r.c'`)).toEqual(`r_obj == "a\\"/p.b" || p_obj == '/r.c'`);
 });

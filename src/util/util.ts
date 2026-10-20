@@ -19,7 +19,31 @@ import { mustGetDefaultFileSystem } from '../persist';
 
 const escapeAssertionReg = new RegExp(/([()\s|&,=!><+\-*/]|^)((r|p)[0-9]*)\./g);
 
+// Quoted string literals are kept as they are.
 function escapeAssertion(s: string): string {
+  let res = '';
+  let start = 0;
+  for (let i = 0; i < s.length; i++) {
+    const quote = s[i];
+    if (quote !== '"' && quote !== "'") {
+      continue;
+    }
+    let end = i + 1;
+    while (end < s.length && s[end] !== quote) {
+      if (s[end] === '\\') {
+        end++;
+      }
+      end++;
+    }
+    end = Math.min(end + 1, s.length);
+    res += escapeAssertionUnquoted(s.slice(start, i)) + s.slice(i, end);
+    start = end;
+    i = end - 1;
+  }
+  return res + escapeAssertionUnquoted(s.slice(start));
+}
+
+function escapeAssertionUnquoted(s: string): string {
   s = s.replace(escapeAssertionReg, (match) => {
     // Replace only the last dot with underscore (preserve the prefix character)
     const lastDotIdx = match.lastIndexOf('.');

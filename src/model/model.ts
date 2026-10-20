@@ -96,17 +96,7 @@ export class Model {
 
       ast.tokens = tokens;
     } else if (sec === 'm') {
-      const stringArguments = value.match(/\"(.*?)\"/g) || [];
-
-      stringArguments.forEach((n, index) => {
-        value = value.replace(n, `$<${index}>`);
-      });
-
       value = util.escapeAssertion(value);
-
-      stringArguments.forEach((n, index) => {
-        value = value.replace(`$<${index}>`, n);
-      });
 
       const invalidOperators = /(?<![&|])&(?!&)|(?<![&|])\|(?!\|)|&{3,}|\|{3,}/g;
       if (invalidOperators.test(value)) {
