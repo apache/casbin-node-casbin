@@ -22,6 +22,7 @@ export class Assertion {
   public key: string;
   public value: string;
   public tokens: string[];
+  public paramsTokens: string[];
   public policy: string[][];
   public rm: rbac.RoleManager;
   public fieldIndexMap: Map<string, number>;
@@ -33,6 +34,7 @@ export class Assertion {
     this.key = '';
     this.value = '';
     this.tokens = [];
+    this.paramsTokens = [];
     this.policy = [];
     this.rm = new rbac.DefaultRoleManager(10);
     this.fieldIndexMap = new Map<string, number>();
@@ -53,10 +55,10 @@ export class Assertion {
       }
       switch (op) {
         case PolicyOp.PolicyAdd:
-          await this.rm.addLink(rule[0], rule[1], ...rule.slice(2));
+          await this.rm.addLink(rule[0], rule[1], ...rule.slice(2, count - this.paramsTokens.length));
           break;
         case PolicyOp.PolicyRemove:
-          await this.rm.deleteLink(rule[0], rule[1], ...rule.slice(2));
+          await this.rm.deleteLink(rule[0], rule[1], ...rule.slice(2, count - this.paramsTokens.length));
           break;
         default:
           throw new Error('unsupported operation');
@@ -74,7 +76,7 @@ export class Assertion {
       if (rule.length > count) {
         rule = rule.slice(0, count);
       }
-      await this.rm.addLink(rule[0], rule[1], ...rule.slice(2));
+      await this.rm.addLink(rule[0], rule[1], ...rule.slice(2, count - this.paramsTokens.length));
     }
     logPrint(`Role links for: ${this.key}`);
     await this.rm.printRoles();

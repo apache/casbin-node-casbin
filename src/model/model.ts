@@ -105,6 +105,10 @@ export class Model {
 
       ast.value = value;
     } else {
+      if (sec === 'g') {
+        const params = value.match(/\((.*?)\)/);
+        ast.paramsTokens = params ? params[1].split(',') : [];
+      }
       ast.value = util.escapeAssertion(value);
     }
 

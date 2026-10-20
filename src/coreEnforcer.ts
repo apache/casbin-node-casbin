@@ -25,6 +25,7 @@ import {
   generateGFunction,
   generateSyncedGFunction,
   getEvalValue,
+  keyMatchFunc,
   hasEval,
   replaceEval,
   generatorRunSync,
@@ -211,10 +212,25 @@ export class CoreEnforcer {
     this.rmMap = new Map<string, RoleManager>();
     const rm = this.model.model.get('g');
     if (rm) {
-      for (const ptype of rm.keys()) {
-        this.rmMap.set(ptype, new DefaultRoleManager(10));
+      for (const [ptype, ast] of rm) {
+        const roleManager = new DefaultRoleManager(10);
+        this.rmMap.set(ptype, roleManager);
+        const count = (ast.value.match(/_/g) || []).length - ast.paramsTokens.length;
+        if (count > 2 && this.usesKeyMatchForDomain()) {
+          roleManager.addDomainMatchingFunc(keyMatchFunc);
+        }
       }
     }
+  }
+
+  private usesKeyMatchForDomain(): boolean {
+    const rDomainToken = this.model.model.get('r')?.get('r')?.tokens[1];
+    const pDomainToken = this.model.model.get('p')?.get('p')?.tokens[1];
+    if (!rDomainToken || !pDomainToken) {
+      return false;
+    }
+    const matcher = this.model.model.get('m')?.get('m')?.value ?? '';
+    return matcher.includes(`keyMatch(${rDomainToken}, ${pDomainToken})`);
   }
 
   public sortPolicies(): void {
