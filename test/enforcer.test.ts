@@ -934,3 +934,36 @@ test('TestEnforceWithEnableAcceptJsonRequest', async () => {
   await testEnforce(e, sub2, '/data2', 'write', false);
   await testEnforce(e, sub3, '/data1', 'read', false);
 });
+
+test('test enforce while policies are removed during evaluation', async () => {
+  const m = newModel();
+  m.addDef('r', 'r', 'sub, obj, act');
+  m.addDef('p', 'p', 'sub, obj, act');
+  m.addDef('e', 'e', 'some(where (p.eft == allow))');
+  m.addDef('m', 'm', 'removeOthers(p.sub) && r.sub == p.sub && r.obj == p.obj && r.act == p.act');
+
+  const e = await newEnforcer(m);
+  await e.addPolicies([
+    ['alice', 'data1', 'read'],
+    ['bob', 'data2', 'write'],
+    ['carol', 'data3', 'read'],
+  ]);
+
+  await e.addFunction('removeOthers', () => {
+    e.getModel().removePolicy('p', 'p', ['bob', 'data2', 'write']);
+    e.getModel().removePolicy('p', 'p', ['carol', 'data3', 'read']);
+    return true;
+  });
+
+  await testEnforce(e, 'carol', 'data3', 'read', true);
+  await e.addPolicies([
+    ['bob', 'data2', 'write'],
+    ['carol', 'data3', 'read'],
+  ]);
+  testEnforceSync(e, 'carol', 'data3', 'read', true);
+  await e.addPolicies([
+    ['bob', 'data2', 'write'],
+    ['carol', 'data3', 'read'],
+  ]);
+  await expect(e.enforceEx('carol', 'data3', 'read')).resolves.toEqual([true, ['carol', 'data3', 'read']]);
+});

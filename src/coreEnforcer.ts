@@ -472,7 +472,8 @@ export class CoreEnforcer {
     let expression: Matcher | undefined = undefined;
 
     const p = this.model.model.get('p')?.get(enforceContext.pType);
-    const policyLen = p?.policy?.length;
+    const policy = p?.policy ? [...p.policy] : [];
+    const policyLen = policy.length;
 
     const rTokens = this.model.model.get('r')?.get(enforceContext.rType)?.tokens;
     const rTokensLen = rTokens?.length;
@@ -503,7 +504,7 @@ export class CoreEnforcer {
         }
 
         p?.tokens.forEach((token, j) => {
-          parameters[token] = p?.policy[i][j];
+          parameters[token] = policy[i][j];
         });
 
         if (HasEval) {
@@ -616,7 +617,7 @@ export class CoreEnforcer {
       if (explainIndex === -1) {
         return [res, []];
       }
-      return [res, p?.policy?.[explainIndex] || []];
+      return [res, policy[explainIndex] || []];
     }
 
     return res;
