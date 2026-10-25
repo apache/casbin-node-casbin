@@ -80,7 +80,7 @@ function arrayEquals(a: string[] = [], b: string[] = []): boolean {
 // array2DEquals determines whether two 2-dimensional string arrays are identical.
 function array2DEquals(a: string[][] = [], b: string[][] = []): boolean {
   const aLen = a.length;
-  const bLen = a.length;
+  const bLen = b.length;
   if (aLen !== bLen) {
     return false;
   }

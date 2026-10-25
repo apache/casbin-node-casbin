@@ -372,3 +372,12 @@ test('test escapeAssertion', () => {
   );
   expect(util.escapeAssertion(`r.obj == "a\\"/p.b" || p.obj == '/r.c'`)).toEqual(`r_obj == "a\\"/p.b" || p_obj == '/r.c'`);
 });
+
+test('array2DEquals compares both outer lengths', () => {
+  expect(util.array2DEquals([], [['alice', 'data1', 'read']])).toBe(false);
+  expect(util.array2DEquals([['alice']], [['alice'], ['bob']])).toBe(false);
+  expect(util.array2DEquals([['alice'], ['bob']], [['alice']])).toBe(false);
+  expect(util.array2DEquals([[]], [])).toBe(false);
+  expect(util.array2DEquals([], [[]])).toBe(false);
+  expect(util.array2DEquals([['alice']], [['alice']])).toBe(true);
+});
