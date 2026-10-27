@@ -91,6 +91,13 @@ test('test keyMatch4Func', () => {
   expect(util.keyMatch4Func('/parent/123/child/456/book/123', '/parent/{id}/child/{id}/book/{id}')).toEqual(false);
   expect(util.keyMatch4Func('/parent/123/child/456/book/', '/parent/{id}/child/{id}/book/{id}')).toEqual(false);
   expect(util.keyMatch4Func('/parent/123/child/456', '/parent/{id}/child/{id}/book/{id}')).toEqual(false);
+
+  // A repeated token must not be compared with the values of other tokens.
+  expect(util.keyMatch4Func('/parent/123/child/123/book/456', '/parent/{id}/child/{id}/book/{book_id}')).toEqual(true);
+  expect(util.keyMatch4Func('/parent/123/child/456/book/789', '/parent/{id}/child/{id}/book/{book_id}')).toEqual(false);
+  expect(util.keyMatch4Func('/org/1/user/2/org/1', '/org/{org}/user/{user}/org/{org}')).toEqual(true);
+  expect(util.keyMatch4Func('/org/1/user/2/org/3', '/org/{org}/user/{user}/org/{org}')).toEqual(false);
+  expect(util.keyMatch4Func('/a/x/b/y/c/y', '/a/{p}/b/{q}/c/{q}')).toEqual(true);
 });
 
 test('test keyMatch5Func', () => {
