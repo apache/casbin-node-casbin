@@ -15,7 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { compile, compileAsync, addBinaryOp } from '@casbin/expression-eval';
+import * as expressionEvaluator from '@casbin/expression-eval';
+
+const { compile, compileAsync, addBinaryOp, parse } = ((expressionEvaluator as any).default ??
+  expressionEvaluator) as typeof expressionEvaluator;
 
 import { DefaultEffector, Effect, Effector } from './effect';
 import { FunctionMap, Model, newModelFromFile, PolicyOp } from './model';
@@ -219,21 +222,66 @@ export class CoreEnforcer {
         const roleManager = new DefaultRoleManager(10);
         this.rmMap.set(ptype, roleManager);
         const count = (ast.value.match(/_/g) || []).length - ast.paramsTokens.length;
-        if (count > 2 && this.usesKeyMatchForDomain()) {
+        if (count === 3 && this.usesKeyMatchForDomain(ptype)) {
           roleManager.addDomainMatchingFunc(keyMatchFunc);
         }
       }
     }
   }
 
-  private usesKeyMatchForDomain(): boolean {
-    const rDomainToken = this.model.model.get('r')?.get('r')?.tokens[1];
-    const pDomainToken = this.model.model.get('p')?.get('p')?.tokens[1];
-    if (!rDomainToken || !pDomainToken) {
+  private usesKeyMatchForDomain(ptype: string): boolean {
+    const requestTokens = this.model.model.get('r')?.get('r')?.tokens ?? [];
+    const policyTokens = this.model.model.get('p')?.get('p')?.tokens ?? [];
+    const matcher = this.model.model.get('m')?.get('m')?.value;
+    if (!matcher) {
       return false;
     }
-    const matcher = this.model.model.get('m')?.get('m')?.value ?? '';
-    return matcher.includes(`keyMatch(${rDomainToken}, ${pDomainToken})`);
+    // Infer a domain pattern only from positive, required matcher conditions.
+    // Text inside a literal, an optional branch or an unrelated resource match
+    // must not change the role manager's domain isolation.
+    const required = (node: any, predicate: (node: any) => boolean): boolean => {
+      if (predicate(node)) {
+        return true;
+      }
+      return (
+        (node.type === 'LogicalExpression' || node.type === 'BinaryExpression') &&
+        node.operator === '&&' &&
+        (required(node.left, predicate) || required(node.right, predicate))
+      );
+    };
+    try {
+      addBinaryOp('in', 6, customIn);
+      const expression = parse(matcher);
+      return required(expression, (node) => {
+        if (node.type !== 'CallExpression' || node.callee.type !== 'Identifier' || node.callee.name !== 'keyMatch') {
+          return false;
+        }
+        const [requestDomain, policyDomain] = node.arguments;
+        if (
+          node.arguments.length !== 2 ||
+          requestDomain?.type !== 'Identifier' ||
+          policyDomain?.type !== 'Identifier' ||
+          !requestTokens.includes(requestDomain.name) ||
+          !policyTokens.includes(policyDomain.name)
+        ) {
+          return false;
+        }
+        return required(expression, (role) => {
+          return (
+            role.type === 'CallExpression' &&
+            role.callee.type === 'Identifier' &&
+            role.callee.name === ptype &&
+            role.arguments.length === 3 &&
+            role.arguments[2].type === 'Identifier' &&
+            role.arguments[2].name === requestDomain.name
+          );
+        });
+      });
+    } catch {
+      // Unsupported expressions keep exact-domain matching. Explicitly
+      // registered domain matching functions remain available to callers.
+      return false;
+    }
   }
 
   public sortPolicies(): void {

@@ -34,18 +34,21 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: apache/casbin
+          ref: 8f5173b17bee2675025e7b46c9a8116ee352ec84
           path: casbin-conformance
           sparse-checkout: conformance
 
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-      - run: yarn install
+      - run: yarn install --frozen-lockfile --ignore-scripts
       - run: yarn lint
       - run: yarn test
         env:
           CASBIN_CONFORMANCE_DIR: ${{ github.workspace }}/casbin-conformance/conformance
       - run: yarn coverage
+        env:
+          CASBIN_CONFORMANCE_DIR: ${{ github.workspace }}/casbin-conformance/conformance
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:

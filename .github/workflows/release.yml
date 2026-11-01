@@ -96,14 +96,24 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
+      - name: Check out pinned conformance fixtures
+        if: steps.meta.outputs.is_rc == 'false'
+        uses: actions/checkout@v4
+        with:
+          repository: apache/casbin
+          ref: 8f5173b17bee2675025e7b46c9a8116ee352ec84
+          path: casbin-conformance
+          sparse-checkout: conformance
+          persist-credentials: false
       - name: Build and test npm package from approved source
         if: steps.meta.outputs.is_rc == 'false'
         env:
           NAME: ${{ steps.meta.outputs.name }}
+          CASBIN_CONFORMANCE_DIR: ${{ github.workspace }}/casbin-conformance/conformance
         run: |
           set -euo pipefail
           cd "dist-release/source/$NAME"
-          yarn install --frozen-lockfile
+          yarn install --frozen-lockfile --ignore-scripts
           yarn lint
           yarn test --runInBand
           yarn build

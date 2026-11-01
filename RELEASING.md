@@ -30,3 +30,14 @@ Every distribution includes LICENSE, NOTICE and DISCLAIMER. Existing GitHub asse
 ## Registry identity migration
 
 The adopted registry name is `apache-casbin`. Historical package versions remain untouched. Confirm administration of this exact new name before publishing; old-package credentials are not sufficient evidence. Preserve existing version lineage in the engineering candidate; project review adopts the final version. Do not publish placeholders, RCs or snapshots to reserve a name.
+
+## Tests and conformance fixtures
+
+Use a frozen Yarn install and run lint, tests and both module builds. To include
+the shared cross-language cases, check out `apache/casbin` at
+`8f5173b17bee2675025e7b46c9a8116ee352ec84` outside the source tree and set
+`CASBIN_CONFORMANCE_DIR` to its `conformance` directory before running the tests.
+CI and the final publication workflow use this same pinned fixture revision.
+These fixtures are test inputs and are not bundled in the source or npm package.
+Without the variable the optional conformance test is skipped; report that
+coverage explicitly when reviewing a release.
