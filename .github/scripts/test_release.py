@@ -39,7 +39,7 @@ class ReleaseSafetyTest(unittest.TestCase):
         subprocess.run(["git", "init", "-q"], check=True)
         for key, value in (("user.name", "Fixture"), ("user.email", "fixture@example.invalid")):
             subprocess.run(["git", "config", key, value], check=True)
-        text = '{"version":"1.2.3"}\n' if release.MANIFEST.endswith("json") else '[project]\nversion="1.2.3"\n'
+        text = ('{"name":"%s","version":"1.2.3"}\n' % release.EXPECTED_PACKAGE) if release.MANIFEST.endswith("json") else ('[project]\nname="%s"\nversion="1.2.3"\n' % release.EXPECTED_PACKAGE)
         Path(release.MANIFEST).write_text(text, encoding="utf8")
         for filename in ("LICENSE", "NOTICE", "DISCLAIMER", "README.md"):
             Path(filename).write_text("Fixture for command safety, not a legal compliance assessment.\n", encoding="utf8")
@@ -70,6 +70,14 @@ class ReleaseSafetyTest(unittest.TestCase):
         if url.endswith(".asc"):
             return b"MOCK SIGNATURE"
         return self.original
+
+    def test_rejects_legacy_package_identity(self):
+        manifest = Path(release.MANIFEST)
+        manifest.write_text(manifest.read_text().replace(release.EXPECTED_PACKAGE, "legacy-package"), encoding="utf8")
+        self.commit()
+        subprocess.run(["git", "tag", "v1.2.3-rc9"], check=True)
+        with self.assertRaisesRegex(ValueError, "identity"):
+            release.metadata("v1.2.3-rc9")
 
     def test_strict_tags(self):
         for tag in ("master", "v1", "v1.2.3-rc0", "v1.2.3-beta1", "v1.2.3-rc1/x", "v1.2.3 "):
@@ -154,6 +162,43 @@ class ReleaseSafetyTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.invoke("verify", "v1.2.3", "different-source")
         self.assertFalse(Path("different-source/source").exists())
+
+    def npm_fixture(self, change=None):
+        Path("lib").mkdir(exist_ok=True)
+        Path("lib/index.js").write_bytes(b"exports.fixture = true;\n")
+        Path(release.MANIFEST).write_text('{"name":"fixture","version":"1.2.3","license":"Apache-2.0","main":"lib/index.js"}', encoding="utf8")
+        files = {name: Path(name).read_bytes() for name in (release.MANIFEST,"LICENSE","NOTICE","DISCLAIMER","README.md","lib/index.js")}
+        if change:
+            change(files)
+        with tarfile.open("fixture.tgz", "w:gz") as archive:
+            for name, data in files.items():
+                entry = tarfile.TarInfo("package/" + name)
+                entry.size = len(data)
+                archive.addfile(entry, io.BytesIO(data))
+
+    def test_npm_preserves_source_legal_and_entry_files(self):
+        self.npm_fixture()
+        release.check_npm("fixture.tgz")
+
+    def test_npm_rejects_missing_built_file(self):
+        self.npm_fixture(lambda files: files.pop("lib/index.js"))
+        with self.assertRaises(ValueError):
+            release.check_npm("fixture.tgz")
+
+    def test_npm_rejects_changed_dependency_metadata(self):
+        self.npm_fixture(lambda files: files.update({release.MANIFEST: b'{"name":"fixture","version":"9.9.9"}'}))
+        with self.assertRaises(ValueError):
+            release.check_npm("fixture.tgz")
+
+    def test_npm_rejects_changed_legal_file(self):
+        self.npm_fixture(lambda files: files.update({"LICENSE":b"wrong"}))
+        with self.assertRaises(ValueError):
+            release.check_npm("fixture.tgz")
+
+    def test_npm_rejects_path_traversal(self):
+        self.npm_fixture(lambda files: files.update({"../outside":b"unsafe"}))
+        with self.assertRaises(ValueError):
+            release.check_npm("fixture.tgz")
 
 
 if __name__ == "__main__":

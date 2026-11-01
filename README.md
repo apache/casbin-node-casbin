@@ -33,13 +33,13 @@ Earlier package publications form the legacy Casbin community release history. T
 [![Release](https://img.shields.io/github/release/apache/casbin-node-casbin.svg)](https://github.com/apache/casbin-node-casbin/releases/latest)
 [![NPM version][npm-image]][npm-url]
 [![NPM download][download-image]][download-url]
-[![install size](https://packagephobia.now.sh/badge?p=casbin)](https://packagephobia.now.sh/result?p=casbin)
+[![install size](https://packagephobia.now.sh/badge?p=apache-casbin)](https://packagephobia.now.sh/result?p=apache-casbin)
 [![Discord](https://img.shields.io/discord/1022748306096537660?logo=discord&label=discord&color=5865F2)](https://discord.gg/S5UjpzGZjN)
 
-[npm-image]: https://img.shields.io/npm/v/casbin.svg?style=flat-square
-[npm-url]: https://npmjs.org/package/casbin
-[download-image]: https://img.shields.io/npm/dm/casbin.svg?style=flat-square
-[download-url]: https://npmjs.org/package/casbin
+[npm-image]: https://img.shields.io/npm/v/apache-casbin.svg?style=flat-square
+[npm-url]: https://npmjs.org/package/apache-casbin
+[download-image]: https://img.shields.io/npm/dm/apache-casbin.svg?style=flat-square
+[download-url]: https://npmjs.org/package/apache-casbin
 
 **News**: still worry about how to write the correct `node-casbin` policy? [Casbin online editor](https://casbin.apache.org/editor) is coming to help!
 
@@ -67,10 +67,10 @@ https://casbin.apache.org/docs/overview
 
 ```shell script
 # NPM
-npm install casbin --save
+npm install apache-casbin --save
 
 # Yarn
-yarn add casbin
+yarn add apache-casbin
 ```
 
 ## Get started
@@ -79,9 +79,9 @@ New a `node-casbin` enforcer with a model file and a policy file, see [Model](#o
 
 ```node.js
 // For Node.js:
-const { newEnforcer } = require('casbin');
+const { newEnforcer } = require('apache-casbin');
 // For browser:
-// import { newEnforcer } from 'casbin';
+// import { newEnforcer } from 'apache-casbin';
 
 const enforcer = await newEnforcer('basic_model.conf', 'basic_policy.csv');
 ```
@@ -158,3 +158,11 @@ If you have any issues or feature requests, please contact us. PR is welcomed.
 
 - https://github.com/apache/casbin-node-casbin/issues
 - https://discord.gg/S5UjpzGZjN
+
+## Runtime requirements
+
+The runtime dependency supports Node.js 20 or 22 and later. Build and development tools require a current Node.js 20 LTS release or later.
+
+## Package-name migration
+
+The next approved distribution uses `apache-casbin` in place of the historical npm package `casbin`. The API is unchanged by the name migration. After the approved package is published, update dependency declarations and imports to `apache-casbin`, regenerate your lockfile and check that adapters use the same core package instance. Existing `casbin` releases remain available; updating that old dependency does not automatically switch packages. Do not install both core identities in one application. Candidates are for review, not installation from npm.

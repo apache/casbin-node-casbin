@@ -26,3 +26,7 @@ A `vX.Y.Z-rcN` tag exports an unsigned source candidate only, never a package re
 After approval, promote the original signed files unchanged to `https://downloads.apache.org/incubator/casbin/node-casbin-X.Y.Z-incubating/` and create the final `vX.Y.Z` tag at the same commit. Pushing the final tag alone does not publish. Run the Release workflow manually with that tag and the two public result URLs. The workflow verifies SHA-512, signature against project KEYS, and every source file/mode against Git before building package registry distributions from the approved archive. Vote-result URLs are an audit reference; the release manager is responsible for checking actual approval.
 
 Every distribution includes LICENSE, NOTICE and DISCLAIMER. Existing GitHub assets and registry versions are never overwritten. A partial publication must be inspected by the release manager before retry; reruns fail safely when a version already exists. Signing, votes, registry credentials, channel administration and final publication are distinct later gates.
+
+## Registry identity migration
+
+The adopted registry name is `apache-casbin`. Historical package versions remain untouched. Confirm administration of this exact new name before publishing; old-package credentials are not sufficient evidence. Preserve existing version lineage in the engineering candidate; project review adopts the final version. Do not publish placeholders, RCs or snapshots to reserve a name.

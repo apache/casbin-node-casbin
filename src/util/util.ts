@@ -184,9 +184,9 @@ function deepCopy(obj: Array<any> | any): any {
 
 function customIn(a: number | string, b: number | string): number {
   if ((b as any) instanceof Array) {
-    return (((b as any) as Array<any>).includes(a) as unknown) as number;
+    return (b as any as Array<any>).includes(a) as unknown as number;
   }
-  return ((a in (b as any)) as unknown) as number;
+  return (a in (b as any)) as unknown as number;
 }
 
 function bracketCompatible(exp: string): string {

@@ -31,6 +31,7 @@ from pathlib import Path
 
 PROJECT = "casbin-node-casbin"
 COMPONENT = "node-casbin"
+EXPECTED_PACKAGE = "apache-casbin"
 MANIFEST = "package.json"
 ASF_BASE = "https://downloads.apache.org/incubator/casbin"
 
@@ -45,7 +46,10 @@ def metadata(tag):
         raise ValueError("Use vX.Y.Z or vX.Y.Z-rcN (N >= 1)")
     version, rc = match.groups()
     manifest = git("show", f"{tag}:{MANIFEST}")
-    actual = json.loads(manifest)["version"] if MANIFEST.endswith("json") else tomllib.loads(manifest.decode())["project"]["version"]
+    package = json.loads(manifest) if MANIFEST.endswith("json") else tomllib.loads(manifest.decode())["project"]
+    if package.get("name") != EXPECTED_PACKAGE:
+        raise ValueError("Committed package identity does not match the adopted name")
+    actual = package["version"]
     if actual != version:
         raise ValueError(f"Commit version {actual} does not match {version}; no version stamping")
     name = f"apache-{PROJECT}-{version}-incubating-src"
@@ -98,12 +102,51 @@ def verify_signature(key_data, target, signature):
         subprocess.run(["gpg", "--batch", "--homedir", str(keyhome), "--verify", str(signature), str(target)], check=True)
 
 
+def check_npm(path):
+    root = Path.cwd()
+    expected = json.loads((root / MANIFEST).read_text())
+    files = {}
+    with tarfile.open(path) as archive:
+        for entry in archive:
+            parts = Path(entry.name).parts
+            if not parts or parts[0] != "package" or ".." in parts or "\\" in entry.name:
+                raise ValueError("Unsafe npm package entry")
+            if entry.isdir():
+                continue
+            canonical = "/".join(parts[1:])
+            if not entry.isfile() or canonical in files:
+                raise ValueError("npm package contains links, special files or duplicates")
+            files[canonical] = archive.extractfile(entry).read()
+    actual = json.loads(files.get(MANIFEST, b"{}"))
+    for field, value in expected.items():
+        if actual.get(field) != value:
+            raise ValueError(f"npm metadata mismatch: {field}")
+    for name in ("LICENSE", "NOTICE", "DISCLAIMER", "README.md"):
+        if files.get(name) != (root / name).read_bytes():
+            raise ValueError(f"npm legal/display content differs: {name}")
+    for name, data in files.items():
+        source = root / name
+        if not source.is_file() or source.read_bytes() != data:
+            raise ValueError(f"Unexpected or changed npm file: {name}")
+    for directory in ("lib", "examples"):
+        for source in (root / directory).rglob("*"):
+            if source.is_file() and files.get(source.relative_to(root).as_posix()) != source.read_bytes():
+                raise ValueError(f"npm package omits built/source file: {source}")
+    for field in ("main", "typings", "module"):
+        if expected.get(field) and expected[field] not in files:
+            raise ValueError(f"npm entry point missing: {field}")
+    print(f"npm contents verified against approved source/build: {path}")
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", choices=["meta", "archive", "verify"])
+    parser.add_argument("command", choices=["meta", "archive", "verify", "npm-check"])
     parser.add_argument("tag")
     parser.add_argument("output", nargs="?", default="dist-release")
     args = parser.parse_args()
+    if args.command == "npm-check":
+        check_npm(args.tag)
+        return
     version, rc, name = metadata(args.tag)
     if args.command == "meta":
         print(f"version={version}\nis_rc={str(rc).lower()}\nname={name}")

@@ -109,6 +109,7 @@ jobs:
           yarn build
           mkdir -p "$GITHUB_WORKSPACE/npm-package"
           npm pack --ignore-scripts --pack-destination "$GITHUB_WORKSPACE/npm-package"
+          python "$GITHUB_WORKSPACE/.github/scripts/release.py" npm-check "$GITHUB_WORKSPACE"/npm-package/*.tgz
       - name: Publish approved-source npm package
         if: steps.meta.outputs.is_rc == 'false'
         env:
