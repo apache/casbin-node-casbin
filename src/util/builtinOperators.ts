@@ -227,11 +227,9 @@ function keyMatch4(key1: string, key2: string): boolean {
   });
 
   for (const value of m.values()) {
-    if (value.length > 1) {
-      for (let i = 1; i < values.length; i++) {
-        if (values[i] !== values[0]) {
-          return false;
-        }
+    for (let i = 1; i < value.length; i++) {
+      if (value[i] !== value[0]) {
+        return false;
       }
     }
   }

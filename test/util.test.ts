@@ -94,6 +94,13 @@ test('test keyMatch4Func', () => {
   expect(util.keyMatch4Func('/parent/123/child/456/book/123', '/parent/{id}/child/{id}/book/{id}')).toEqual(false);
   expect(util.keyMatch4Func('/parent/123/child/456/book/', '/parent/{id}/child/{id}/book/{id}')).toEqual(false);
   expect(util.keyMatch4Func('/parent/123/child/456', '/parent/{id}/child/{id}/book/{id}')).toEqual(false);
+
+  // A repeated token must not be compared with the values of other tokens.
+  expect(util.keyMatch4Func('/parent/123/child/123/book/456', '/parent/{id}/child/{id}/book/{book_id}')).toEqual(true);
+  expect(util.keyMatch4Func('/parent/123/child/456/book/789', '/parent/{id}/child/{id}/book/{book_id}')).toEqual(false);
+  expect(util.keyMatch4Func('/org/1/user/2/org/1', '/org/{org}/user/{user}/org/{org}')).toEqual(true);
+  expect(util.keyMatch4Func('/org/1/user/2/org/3', '/org/{org}/user/{user}/org/{org}')).toEqual(false);
+  expect(util.keyMatch4Func('/a/x/b/y/c/y', '/a/{p}/b/{q}/c/{q}')).toEqual(true);
 });
 
 test('test keyMatch5Func', () => {
@@ -370,4 +377,17 @@ test('test escapeAssertion', () => {
   // Test that patterns inside strings are not escaped
   expect(util.escapeAssertion('r.sub == "a.p.p.l.e"')).toEqual('r_sub == "a.p.p.l.e"');
   expect(util.escapeAssertion('r.sub == "test.p.value"')).toEqual('r_sub == "test.p.value"');
+  expect(util.escapeAssertion(`r.obj == 'https://p.example.com' && p.sub == r.sub`)).toEqual(
+    `r_obj == 'https://p.example.com' && p_sub == r_sub`
+  );
+  expect(util.escapeAssertion(`r.obj == "a\\"/p.b" || p.obj == '/r.c'`)).toEqual(`r_obj == "a\\"/p.b" || p_obj == '/r.c'`);
+});
+
+test('array2DEquals compares both outer lengths', () => {
+  expect(util.array2DEquals([], [['alice', 'data1', 'read']])).toBe(false);
+  expect(util.array2DEquals([['alice']], [['alice'], ['bob']])).toBe(false);
+  expect(util.array2DEquals([['alice'], ['bob']], [['alice']])).toBe(false);
+  expect(util.array2DEquals([[]], [])).toBe(false);
+  expect(util.array2DEquals([], [[]])).toBe(false);
+  expect(util.array2DEquals([['alice']], [['alice']])).toBe(true);
 });
