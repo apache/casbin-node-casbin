@@ -16,7 +16,7 @@
   "scripts": {
     "prepack": "run-s lint test build",
     "postpack": "run-s clean",
-    "build": "run-s clean && run-p build:*",
+    "build": "run-s clean && run-p build:cjs build:esm && node .github/scripts/add-output-headers.cjs",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:esm": "tsup src/index.ts --format esm --outDir lib/esm --no-splitting --no-dts",
     "test": "jest",
