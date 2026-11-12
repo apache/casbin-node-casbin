@@ -14,7 +14,6 @@
 
 import * as rbac from '../rbac';
 import { ip } from './ip';
-import { minimatch } from 'minimatch';
 
 // regexMatch determines whether key1 matches the pattern of key2 in regular expression.
 function regexMatch(key1: string, key2: string): boolean {
@@ -315,8 +314,106 @@ function ipMatchFunc(...args: any[]): boolean {
   return ipMatch(ip1, ip2);
 }
 
+// globToRegExp turns a glob pattern into a RegExp with the same rules as
+// Go Casbin's util.GlobMatch (github.com/bmatcuk/doublestar/v4):
+// `*` matches any run of non-`/` characters (also empty and dot-files),
+// `?` one non-`/` character, `**` as a whole path segment zero or more
+// directories, `[...]` / `[!...]` / `[^...]` a character class, `{a,b}`
+// alternatives and `\` escapes the next character. A leading `!` is a
+// literal character, not a negation. Returns null for a bad pattern.
+function globToRegExp(pattern: string): RegExp | null {
+  let re = '';
+  let braces = 0;
+  for (let i = 0; i < pattern.length; i++) {
+    const c = pattern[i];
+    if (c === '\\') {
+      i++;
+      if (i === pattern.length) {
+        return null;
+      }
+      re += escapeRegExp(pattern[i]);
+    } else if (c === '*') {
+      let j = i;
+      while (pattern[j + 1] === '*') {
+        j++;
+      }
+      const segmentStart = i === 0 || pattern[i - 1] === '/';
+      const segmentEnd = j + 1 === pattern.length || pattern[j + 1] === '/';
+      if (j > i && segmentStart && segmentEnd) {
+        const parentSlash = re.endsWith('/');
+        if (j + 2 < pattern.length || (j + 2 === pattern.length && !parentSlash)) {
+          // `**/` matches zero or more directories.
+          re += '(?:.*/)?';
+          j++;
+        } else if (j + 2 === pattern.length) {
+          // A trailing `/**/` also matches the parent without the slash.
+          re = re.slice(0, -1) + '(?:/(?:.*/)?)?';
+          j++;
+        } else if (parentSlash) {
+          // A trailing `/**` also matches the parent itself.
+          re = re.slice(0, -1) + '(?:/.*)?';
+        } else {
+          re += '.*';
+        }
+      } else {
+        re += '[^/]*';
+      }
+      i = j;
+    } else if (c === '?') {
+      re += '[^/]';
+    } else if (c === '[') {
+      let j = i + 1;
+      let cls = '';
+      if (pattern[j] === '!' || pattern[j] === '^') {
+        cls += '^';
+        j++;
+      }
+      const first = j;
+      for (; j < pattern.length && pattern[j] !== ']'; j++) {
+        if (pattern[j] === '\\') {
+          j++;
+          if (j === pattern.length) {
+            return null;
+          }
+          cls += escapeRegExp(pattern[j]);
+        } else {
+          cls += pattern[j] === '-' ? '-' : escapeRegExp(pattern[j]);
+        }
+      }
+      if (j === pattern.length || j === first) {
+        return null;
+      }
+      re += '[' + cls + ']';
+      i = j;
+    } else if (c === '{') {
+      braces++;
+      re += '(?:';
+    } else if (c === ',' && braces > 0) {
+      re += '|';
+    } else if (c === '}' && braces > 0) {
+      braces--;
+      re += ')';
+    } else {
+      re += escapeRegExp(c);
+    }
+  }
+  if (braces > 0) {
+    return null;
+  }
+  try {
+    return new RegExp('^' + re + '$');
+  } catch (e) {
+    return null;
+  }
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
+}
+
 /**
  * Returns true if the specified `string` matches the given glob `pattern`.
+ * Same rules as Go Casbin's util.GlobMatch, see globToRegExp.
  *
  * @param string String to match
  * @param pattern Glob pattern to use for matching.
@@ -328,12 +425,8 @@ function ipMatchFunc(...args: any[]): boolean {
  * ```
  */
 function globMatch(string: string, pattern: string): boolean {
-  // The minimatch doesn't support the pattern starts with *
-  // See https://github.com/isaacs/minimatch/issues/195
-  if (pattern[0] === '*' && pattern[1] === '/') {
-    pattern = pattern.substring(1);
-  }
-  return minimatch(string, pattern);
+  const re = globToRegExp(pattern);
+  return re !== null && re.test(string);
 }
 
 // generateGFunction is the factory method of the g(_, _) function.

@@ -314,6 +314,35 @@ test('test globMatch', () => {
   expect(util.globMatch('/prefix/subprefix/foobar', '*/foo/*')).toEqual(false);
 
   expect(util.globMatch('a.conf', '*.conf')).toEqual(true);
+
+  // Same results as Go Casbin's util.GlobMatch (doublestar).
+  expect(util.globMatch('/admin/.env', '/admin/*')).toEqual(true);
+  expect(util.globMatch('/admin/', '/admin/*')).toEqual(true);
+  expect(util.globMatch('/files/.git/config', '/files/**')).toEqual(true);
+  expect(util.globMatch('/files', '/files/**')).toEqual(true);
+  expect(util.globMatch('/files/a/b/c.txt', '/files/**/*.txt')).toEqual(true);
+  expect(util.globMatch('/files/c.txt', '/files/**/*.txt')).toEqual(true);
+  expect(util.globMatch('/a/b', '!/c')).toEqual(false);
+  expect(util.globMatch('!/c', '!/c')).toEqual(true);
+  expect(util.globMatch('/a/b/', '/a/b')).toEqual(false);
+  expect(util.globMatch('/a/b', '/a/b/')).toEqual(false);
+  expect(util.globMatch('/a/b', '/a/?')).toEqual(true);
+  expect(util.globMatch('/a/bc', '/a/?')).toEqual(false);
+  expect(util.globMatch('/a/b', '/a/[ab]')).toEqual(true);
+  expect(util.globMatch('/a/b', '/a/[!ab]')).toEqual(false);
+  expect(util.globMatch('/a/x', '/a/[^ab]')).toEqual(true);
+  expect(util.globMatch('/a/b', '/a/{b,c}')).toEqual(true);
+  expect(util.globMatch('/a/d', '/a/{b,c}')).toEqual(false);
+  expect(util.globMatch('/a/+(b)', '/a/+(b)')).toEqual(true);
+  expect(util.globMatch('/a/b', '/a/+(b)')).toEqual(false);
+  expect(util.globMatch('/a/*', '/a/\\*')).toEqual(true);
+  expect(util.globMatch('/a/b', '/a/\\*')).toEqual(false);
+  expect(util.globMatch('/a.b', '/a?b')).toEqual(true);
+  expect(util.globMatch('/axb', '/a.b')).toEqual(false);
+  // A bad pattern matches nothing.
+  expect(util.globMatch('/a', '/[a')).toEqual(false);
+  expect(util.globMatch('/a', '/{a')).toEqual(false);
+  expect(util.globMatch('/a', '/a\\')).toEqual(false);
 });
 
 test('test hasEval', () => {
