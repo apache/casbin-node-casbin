@@ -339,6 +339,15 @@ test('test globMatch', () => {
   expect(util.globMatch('/a/b', '/a/\\*')).toEqual(false);
   expect(util.globMatch('/a.b', '/a?b')).toEqual(true);
   expect(util.globMatch('/axb', '/a.b')).toEqual(false);
+  expect(util.globMatch('/a\nb', '/**')).toEqual(true);
+  expect(util.globMatch('/x/a\nb/c', '/x/**/c')).toEqual(true);
+  expect(util.globMatch('/a\nb', '/*')).toEqual(true);
+  expect(util.globMatch('/a/b/c', '/a/**/**/c')).toEqual(true);
+  expect(util.globMatch('/a/c', '/a/**/**/c')).toEqual(true);
+  // Long paths with many `**` do not backtrack.
+  const longPath = '/' + 'a/'.repeat(3000) + 'x';
+  expect(util.globMatch(longPath, '/**/a/**/a/**/a/**/y')).toEqual(false);
+  expect(util.globMatch(longPath, '/**/a/**/a/**/a/**/x')).toEqual(true);
   // A bad pattern matches nothing.
   expect(util.globMatch('/a', '/[a')).toEqual(false);
   expect(util.globMatch('/a', '/{a')).toEqual(false);

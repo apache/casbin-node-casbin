@@ -314,16 +314,80 @@ function ipMatchFunc(...args: any[]): boolean {
   return ipMatch(ip1, ip2);
 }
 
-// globToRegExp turns a glob pattern into a RegExp with the same rules as
-// Go Casbin's util.GlobMatch (github.com/bmatcuk/doublestar/v4):
-// `*` matches any run of non-`/` characters (also empty and dot-files),
-// `?` one non-`/` character, `**` as a whole path segment zero or more
-// directories, `[...]` / `[!...]` / `[^...]` a character class, `{a,b}`
-// alternatives and `\` escapes the next character. A leading `!` is a
-// literal character, not a negation. Returns null for a bad pattern.
-function globToRegExp(pattern: string): RegExp | null {
-  let re = '';
-  let braces = 0;
+// Glob matching with the same rules as Go Casbin's util.GlobMatch
+// (github.com/bmatcuk/doublestar/v4): `*` matches any run of non-`/`
+// characters (also empty and dot-files), `?` one non-`/` character, `**` as
+// a whole path segment zero or more directories, `[...]` / `[!...]` /
+// `[^...]` a character class, `{a,b}` alternatives and `\` escapes the next
+// character. A leading `!` is a literal character, not a negation.
+//
+// Matching is a dynamic program over (token, position), so it takes
+// O(tokens * length) time and never backtracks.
+
+type GlobToken =
+  | { t: 'lit'; c: string }
+  | { t: 'one' }
+  | { t: 'cls'; neg: boolean; ranges: [string, string][] }
+  | { t: 'star' } // `*`: any run of non-`/` characters
+  | { t: 'dirs' } // `**/`: zero or more directories
+  | { t: 'any' } // `**` as the whole pattern: anything
+  | { t: 'tailAny' } // trailing `/**`: nothing, or `/` and anything
+  | { t: 'tailDirs' }; // trailing `/**/`: nothing, or `/` and directories
+
+const maxGlobAlternatives = 1024;
+
+// globExpandBraces expands `{a,b}` into separate patterns.
+// Returns null for an unclosed `{` or too many alternatives.
+function globExpandBraces(pattern: string): string[] | null {
+  let open = -1;
+  let depth = 0;
+  const commas: number[] = [];
+  for (let i = 0; i < pattern.length; i++) {
+    const c = pattern[i];
+    if (c === '\\') {
+      i++;
+    } else if (c === '[') {
+      const close = pattern.indexOf(']', i + 2);
+      if (close !== -1) {
+        i = close;
+      }
+    } else if (c === '{') {
+      if (depth === 0) {
+        open = i;
+      }
+      depth++;
+    } else if (c === ',' && depth === 1) {
+      commas.push(i);
+    } else if (c === '}' && depth > 0) {
+      depth--;
+      if (depth === 0) {
+        const prefix = pattern.slice(0, open);
+        const suffix = pattern.slice(i + 1);
+        const bounds = [open, ...commas, i];
+        const out: string[] = [];
+        for (let k = 0; k + 1 < bounds.length; k++) {
+          const expanded = globExpandBraces(prefix + pattern.slice(bounds[k] + 1, bounds[k + 1]) + suffix);
+          if (expanded === null || out.length + expanded.length > maxGlobAlternatives) {
+            return null;
+          }
+          out.push(...expanded);
+        }
+        return out;
+      }
+    }
+  }
+  return depth > 0 ? null : [pattern];
+}
+
+// globTokenize turns a pattern without braces into tokens.
+// Returns null for a bad pattern.
+function globTokenize(pattern: string): GlobToken[] | null {
+  const tokens: GlobToken[] = [];
+  const last = (): GlobToken | undefined => tokens[tokens.length - 1];
+  const afterSlash = (): boolean => {
+    const l = last();
+    return l !== undefined && l.t === 'lit' && l.c === '/';
+  };
   for (let i = 0; i < pattern.length; i++) {
     const c = pattern[i];
     if (c === '\\') {
@@ -331,7 +395,7 @@ function globToRegExp(pattern: string): RegExp | null {
       if (i === pattern.length) {
         return null;
       }
-      re += escapeRegExp(pattern[i]);
+      tokens.push({ t: 'lit', c: pattern[i] });
     } else if (c === '*') {
       let j = i;
       while (pattern[j + 1] === '*') {
@@ -340,80 +404,127 @@ function globToRegExp(pattern: string): RegExp | null {
       const segmentStart = i === 0 || pattern[i - 1] === '/';
       const segmentEnd = j + 1 === pattern.length || pattern[j + 1] === '/';
       if (j > i && segmentStart && segmentEnd) {
-        const parentSlash = re.endsWith('/');
-        if (j + 2 < pattern.length || (j + 2 === pattern.length && !parentSlash)) {
-          // `**/` matches zero or more directories.
-          re += '(?:.*/)?';
+        if (j + 2 < pattern.length || (j + 2 === pattern.length && !afterSlash())) {
+          // Repeated `**/` mean the same as one.
+          if (last()?.t !== 'dirs') {
+            tokens.push({ t: 'dirs' });
+          }
           j++;
         } else if (j + 2 === pattern.length) {
           // A trailing `/**/` also matches the parent without the slash.
-          re = re.slice(0, -1) + '(?:/(?:.*/)?)?';
+          tokens.pop();
+          tokens.push({ t: 'tailDirs' });
           j++;
-        } else if (parentSlash) {
+        } else if (afterSlash()) {
           // A trailing `/**` also matches the parent itself.
-          re = re.slice(0, -1) + '(?:/.*)?';
+          tokens.pop();
+          tokens.push({ t: 'tailAny' });
+        } else if (last()?.t === 'dirs') {
+          tokens[tokens.length - 1] = { t: 'any' };
         } else {
-          re += '.*';
+          tokens.push({ t: 'any' });
         }
       } else {
-        re += '[^/]*';
+        tokens.push({ t: 'star' });
       }
       i = j;
     } else if (c === '?') {
-      re += '[^/]';
+      tokens.push({ t: 'one' });
     } else if (c === '[') {
       let j = i + 1;
-      let cls = '';
-      if (pattern[j] === '!' || pattern[j] === '^') {
-        cls += '^';
+      const neg = pattern[j] === '!' || pattern[j] === '^';
+      if (neg) {
         j++;
       }
-      const first = j;
+      const chars: string[] = [];
+      const ranges: [string, string][] = [];
       for (; j < pattern.length && pattern[j] !== ']'; j++) {
         if (pattern[j] === '\\') {
           j++;
           if (j === pattern.length) {
             return null;
           }
-          cls += escapeRegExp(pattern[j]);
-        } else {
-          cls += pattern[j] === '-' ? '-' : escapeRegExp(pattern[j]);
         }
+        chars.push(pattern[j]);
       }
-      if (j === pattern.length || j === first) {
+      if (j === pattern.length || chars.length === 0) {
         return null;
       }
-      re += '[' + cls + ']';
+      for (let k = 0; k < chars.length; k++) {
+        if (chars[k + 1] === '-' && k + 2 < chars.length) {
+          if (chars[k] > chars[k + 2]) {
+            return null;
+          }
+          ranges.push([chars[k], chars[k + 2]]);
+          k += 2;
+        } else {
+          ranges.push([chars[k], chars[k]]);
+        }
+      }
+      tokens.push({ t: 'cls', neg, ranges });
       i = j;
-    } else if (c === '{') {
-      braces++;
-      re += '(?:';
-    } else if (c === ',' && braces > 0) {
-      re += '|';
-    } else if (c === '}' && braces > 0) {
-      braces--;
-      re += ')';
     } else {
-      re += escapeRegExp(c);
+      tokens.push({ t: 'lit', c });
     }
   }
-  if (braces > 0) {
-    return null;
-  }
-  try {
-    return new RegExp('^' + re + '$');
-  } catch (e) {
-    return null;
-  }
+  return tokens;
 }
 
-function escapeRegExp(s: string): string {
-  return s.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
+function globMatchTokens(tokens: GlobToken[], s: string): boolean {
+  const n = s.length;
+  // next[k]: tokens after the current one match s.slice(k).
+  let next = new Uint8Array(n + 1);
+  next[n] = 1;
+  for (let t = tokens.length - 1; t >= 0; t--) {
+    const tok = tokens[t];
+    const cur = new Uint8Array(n + 1);
+    let run = 0; // for `dirs`: s.slice(k) is a non-`/` run, `/`, then a match
+    for (let k = n; k >= 0; k--) {
+      const c = s[k];
+      let ok = false;
+      switch (tok.t) {
+        case 'lit':
+          ok = k < n && c === tok.c && next[k + 1] === 1;
+          break;
+        case 'one':
+          ok = k < n && c !== '/' && next[k + 1] === 1;
+          break;
+        case 'cls': {
+          if (k < n && next[k + 1] === 1) {
+            const inClass = tok.ranges.some(([lo, hi]) => c >= lo && c <= hi);
+            ok = inClass !== tok.neg;
+          }
+          break;
+        }
+        case 'star':
+          ok = next[k] === 1 || (k < n && c !== '/' && cur[k + 1] === 1);
+          break;
+        case 'any':
+          ok = next[k] === 1 || (k < n && cur[k + 1] === 1);
+          break;
+        case 'dirs':
+          if (k < n) {
+            run = c === '/' ? cur[k + 1] : run;
+          }
+          ok = next[k] === 1 || (k < n && run === 1);
+          break;
+        case 'tailAny':
+          ok = k === n || c === '/';
+          break;
+        case 'tailDirs':
+          ok = k === n || (c === '/' && (k + 1 === n || s[n - 1] === '/'));
+          break;
+      }
+      cur[k] = ok ? 1 : 0;
+    }
+    next = cur;
+  }
+  return next[0] === 1;
 }
 
 /**
  * Returns true if the specified `string` matches the given glob `pattern`.
- * Same rules as Go Casbin's util.GlobMatch, see globToRegExp.
+ * Same rules as Go Casbin's util.GlobMatch, see globTokenize.
  *
  * @param string String to match
  * @param pattern Glob pattern to use for matching.
@@ -425,8 +536,20 @@ function escapeRegExp(s: string): string {
  * ```
  */
 function globMatch(string: string, pattern: string): boolean {
-  const re = globToRegExp(pattern);
-  return re !== null && re.test(string);
+  const patterns = globExpandBraces(pattern);
+  if (patterns === null) {
+    return false;
+  }
+  for (const p of patterns) {
+    const tokens = globTokenize(p);
+    if (tokens === null) {
+      return false;
+    }
+    if (globMatchTokens(tokens, string)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // generateGFunction is the factory method of the g(_, _) function.
