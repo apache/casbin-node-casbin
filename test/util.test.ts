@@ -69,6 +69,12 @@ test('test keyGet2Func', () => {
   expect(util.keyGet2Func('/foo/baz/foo', '/foo/:bar/foo', 'bar')).toEqual('baz');
   expect(util.keyGet2Func('/baz', '/foo', 'bar')).toEqual('');
   expect(util.keyGet2Func('/foo/baz', '/foo', 'bar')).toEqual('');
+  expect(util.keyGet2Func('/foo/baz', '*', 'bar')).toEqual('');
+  expect(util.keyGet2Func('/orgs/acme/teams/t1/docs/42', '/orgs/*/docs/:id', 'id')).toEqual('42');
+  expect(util.keyGet2Func('/a/b/c/d', '/*/:x/:y', 'x')).toEqual('c');
+  expect(util.keyGet2Func('/a/b/c/d', '/*/:x/:y', 'y')).toEqual('d');
+  expect(util.keyGet2Func('/files/report-7', '/files/report-:id', 'id')).toEqual('7');
+  expect(util.keyGet2Func('/files/report-7', '/files/report-:id', 'other')).toEqual('');
 });
 
 test('test keyMatch3Func', () => {

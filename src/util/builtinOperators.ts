@@ -108,21 +108,23 @@ function keyMatch2Func(...args: any[]): boolean {
 // For example, "/resource1" matches "/:resource"
 // if the pathVar == "resource", then "resource1" will be returned
 function keyGet2(key1: string, key2: string, pathVar: string): string {
-  if (keyMatch2(key1, key2)) {
-    const re = new RegExp('[^/]+', 'g');
-    const keys = key2.match(re);
-    const values = key1.match(re);
-    if (!keys || !values) {
-      return '';
-    }
-    const index = keys.indexOf(`:${pathVar}`);
-    if (index === -1) {
-      return '';
-    }
-    return values[index];
-  } else {
+  key2 = key2.replace(/\/\*/g, '/.*');
+  if (key2 === '*') {
+    key2 = '.*';
+  }
+
+  const keys: string[] = key2.match(/:[^/]+/g) || [];
+  key2 = key2.replace(/:[^/]+/g, '([^/]+)');
+
+  const values = new RegExp('^' + key2 + '$').exec(key1);
+  if (!values) {
     return '';
   }
+  const index = keys.indexOf(`:${pathVar}`);
+  if (index === -1) {
+    return '';
+  }
+  return values[index + 1];
 }
 
 function keyGet2Func(...args: any[]): string {
