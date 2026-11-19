@@ -53,7 +53,7 @@
     "await-lock": "^2.0.1",
     "buffer": "^6.0.3",
     "csv-parse": "^7.0.3",
-    "minimatch": "^10.2.6"
+    "minimatch": "^11.0.1"
   },
   "files": [
     "lib",
