@@ -196,6 +196,24 @@ test('test ipMatchFunc - IPv6 CIDR containment is correct', () => {
   expect(util.ipMatchFunc('fe80::1', 'fd00::/8')).toEqual(false);
 });
 
+// Node reports IPv4 clients of a dual-stack server as IPv4-mapped IPv6 (::ffff:a.b.c.d).
+test('test ipMatchFunc - IPv4-mapped IPv6 address in an IPv4 CIDR', () => {
+  expect(util.ipMatchFunc('::ffff:192.168.2.123', '192.168.2.0/24')).toEqual(true);
+  expect(util.ipMatchFunc('::ffff:c0a8:27b', '192.168.2.0/24')).toEqual(true);
+  expect(util.ipMatchFunc('::FFFF:192.168.2.123', '192.168.2.0/24')).toEqual(true);
+  expect(util.ipMatchFunc('::ffff:10.0.0.1', '0.0.0.0/0')).toEqual(true);
+  expect(util.ipMatchFunc('::ffff:203.0.113.42', '203.0.113.42/32')).toEqual(true);
+
+  expect(util.ipMatchFunc('::ffff:192.168.3.1', '192.168.2.0/24')).toEqual(false);
+  expect(util.ipMatchFunc('::ffff:203.0.113.43', '203.0.113.42/32')).toEqual(false);
+  // Only ::ffff:0:0/96 is IPv4; other IPv6 addresses never match an IPv4 CIDR
+  expect(util.ipMatchFunc('::c0a8:27b', '192.168.2.0/24')).toEqual(false);
+  expect(util.ipMatchFunc('2001:db8::c0a8:27b', '192.168.2.0/24')).toEqual(false);
+  expect(util.ipMatchFunc('::1:ffff:c0a8:27b', '192.168.2.0/24')).toEqual(false);
+  // An overflowed octet must not sneak in through the mapped form
+  expect(util.ipMatchFunc('::ffff:448.168.2.10', '192.168.2.0/24')).toEqual(false);
+});
+
 // CVE fix: garbage input like "abc" must be rejected, not silently match IPv6 policies.
 test('test ipMatchFunc - non-IP strings are rejected as ip1', () => {
   expect(() => util.ipMatchFunc('abc', '::1/128')).toThrow(Error);

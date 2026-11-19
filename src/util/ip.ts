@@ -219,6 +219,11 @@ export const ip = {
       contains: function (other: string) {
         let otherBuffer: Buffer;
         try {
+          // An IPv4-mapped IPv6 address (::ffff:a.b.c.d) is the IPv4 address
+          // a.b.c.d, so compare it with an IPv4 subnet as IPv4.
+          if (networkBuffer.length === 4) {
+            other = ip.toIPv4IfMapped(other);
+          }
           otherBuffer = ip.toBuffer(ip.mask(other, mask));
         } catch {
           return false;
@@ -281,6 +286,17 @@ export const ip = {
     }
 
     return true;
+  },
+  toIPv4IfMapped: function (addr: string): string {
+    if (!ip.isV6Format(addr)) {
+      return addr;
+    }
+    const buff = ip.toBuffer(addr);
+    for (let i = 0; i < 10; i++) {
+      if (buff[i] !== 0) return addr;
+    }
+    if (buff[10] !== 0xff || buff[11] !== 0xff) return addr;
+    return ip.toString(buff, 12, 4);
   },
   toLong: function (ip: string): number {
     let ipl = 0;
