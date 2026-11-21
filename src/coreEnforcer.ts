@@ -17,7 +17,8 @@
 
 import * as expressionEvaluator from '@casbin/expression-eval';
 
-const { compile, compileAsync, addBinaryOp, parse } = ((expressionEvaluator as any).default ??
+// The CommonJS entry can provide a default at runtime; the bundler entry has named exports.
+const { compile, compileAsync, addBinaryOp, parse } = (Reflect.get(expressionEvaluator, 'default') ??
   expressionEvaluator) as typeof expressionEvaluator;
 
 import { DefaultEffector, Effect, Effector } from './effect';
