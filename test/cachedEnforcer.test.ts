@@ -92,3 +92,11 @@ test('TestCacheWithEnableEnforce', async () => {
   await testEnforce(e, 'bob', 'data1', 'read', false);
   await testEnforce(e, 'alice', 'data2', 'read', false);
 });
+
+test('TestCacheKeysDoNotCollide', async () => {
+  const e = await newCachedEnforcer('examples/basic_model.conf');
+  await e.addPolicy('alice', 'data1$$read', 'write');
+
+  await testEnforce(e, 'alice', 'data1$$read', 'write', true);
+  await testEnforce(e, 'alice$$data1', 'read', 'write', false);
+});

@@ -38,8 +38,9 @@ export class CachedEnforcer extends Enforcer {
     return rvals.every((n) => typeof n === 'string');
   }
 
+  // getCacheKey length-prefixes each value so that different requests never share a key.
   private static getCacheKey(...rvals: string[]): string {
-    return rvals.join('$$');
+    return rvals.map((n) => `${n.length}:${n}`).join('');
   }
 
   private getCache(key: string): boolean | undefined {
