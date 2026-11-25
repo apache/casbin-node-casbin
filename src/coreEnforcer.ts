@@ -213,6 +213,11 @@ export class CoreEnforcer {
    */
   public clearPolicy(): void {
     this.model.clearPolicy();
+    if (this.autoBuildRoleLinks) {
+      this.rmMap?.forEach((rm) => {
+        rm.clear().catch(() => undefined);
+      });
+    }
   }
 
   public initRmMap(): void {

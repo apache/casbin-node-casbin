@@ -292,6 +292,12 @@ test('TestClearPolicy', async () => {
   const e = await newEnforcer('examples/rbac_model.conf', 'examples/rbac_policy.csv');
 
   e.clearPolicy();
+
+  // The role links from the cleared "g" rules must not keep granting access.
+  await e.addPolicy('data2_admin', 'data2', 'read');
+  await testEnforce(e, 'alice', 'data2', 'read', false);
+  testEnforceSync(e, 'alice', 'data2', 'read', false);
+  expect(await e.hasRoleForUser('alice', 'data2_admin')).toBe(false);
 });
 
 test('TestEnableEnforce', async () => {
