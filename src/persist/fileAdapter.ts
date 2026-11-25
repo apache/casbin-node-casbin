@@ -73,7 +73,7 @@ export class FileAdapter implements Adapter {
       pList.forEach((n) => {
         n.policy.forEach((m) => {
           result += n.key + ', ';
-          result += arrayToString(m);
+          result += arrayToString(m.map((element) => this.escapeCsv(element)));
           result += '\n';
         });
       });
@@ -95,8 +95,12 @@ export class FileAdapter implements Adapter {
   }
 
   private escapeCsv(value: string): string {
-    // If the value contains a comma, wrap it in double quotes and escape any existing double quotes
-    if (value.includes(',')) {
+    // Policy lines are loaded one line at a time, so a line break would start another rule.
+    if (/[\r\n]/.test(value)) {
+      throw new Error(`invalid policy field ${JSON.stringify(value)}: line breaks are not allowed`);
+    }
+    // If the value contains a comma or a double quote, wrap it in double quotes and escape any existing double quotes
+    if (value.includes(',') || value.includes('"')) {
       return `"${value.replace(/"/g, '""')}"`;
     }
     return value;

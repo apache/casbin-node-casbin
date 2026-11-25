@@ -1,0 +1,69 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
+import { FileAdapter, FileSystem, newEnforcer, newModel } from '../../src';
+
+const modelText = `[request_definition]
+r = sub, obj, act
+[policy_definition]
+p = sub, obj, act
+[role_definition]
+g = _, _
+[policy_effect]
+e = some(where (p.eft == allow))
+[matchers]
+m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
+`;
+
+function memoryFileSystem(files: Map<string, string>): FileSystem {
+  return {
+    readFileSync(path: string): Buffer {
+      return Buffer.from(files.get(path) ?? '');
+    },
+    writeFileSync(path: string, text: string): void {
+      files.set(path, text);
+    },
+  };
+}
+
+test('savePolicy keeps fields with commas in one field', async () => {
+  const files = new Map<string, string>([['policy.csv', '']]);
+  const e = await newEnforcer(newModel(modelText), new FileAdapter('policy.csv', memoryFileSystem(files)));
+  await e.addPolicy('bob', 'data1, write', 'read');
+  await e.addPolicy('dave', 'say "hi"', 'read');
+  await e.addGroupingPolicy('carol', 'admin, staff');
+  await e.savePolicy();
+
+  const e2 = await newEnforcer(newModel(modelText), new FileAdapter('policy.csv', memoryFileSystem(files)));
+  expect(await e2.getPolicy()).toEqual([
+    ['bob', 'data1, write', 'read'],
+    ['dave', 'say "hi"', 'read'],
+  ]);
+  expect(await e2.getGroupingPolicy()).toEqual([['carol', 'admin, staff']]);
+  await expect(e2.enforce('bob', 'data1', 'write')).resolves.toBe(false);
+});
+
+test('savePolicy rejects fields with line breaks', async () => {
+  const files = new Map<string, string>([['policy.csv', 'p, alice, data1, read']]);
+  const e = await newEnforcer(newModel(modelText), new FileAdapter('policy.csv', memoryFileSystem(files)));
+  await e.addPolicy('bob', 'data2\np, eve, data1', 'read');
+  await expect(e.savePolicy()).rejects.toThrow();
+  await e.removePolicy('bob', 'data2\np, eve, data1', 'read');
+  await e.addGroupingPolicy('bob', 'admin\r\ng, eve');
+  await expect(e.savePolicy()).rejects.toThrow();
+  expect(files.get('policy.csv')).toEqual('p, alice, data1, read');
+});
