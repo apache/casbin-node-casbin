@@ -416,6 +416,7 @@ export class CoreEnforcer {
    */
   public enableEnforce(enable: boolean): void {
     this.enabled = enable;
+    this.bumpPolicyVersion();
   }
 
   /**

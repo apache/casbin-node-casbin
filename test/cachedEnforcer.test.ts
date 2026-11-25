@@ -80,3 +80,15 @@ test('TestCacheNotWrittenWhenPolicyChangesDuringEnforce', async () => {
 
   await testEnforce(e, 'alice', 'data1', 'read', false);
 });
+
+test('TestCacheWithEnableEnforce', async () => {
+  const e = await newCachedEnforcer('examples/basic_model.conf', 'examples/basic_policy.csv');
+
+  await testEnforce(e, 'bob', 'data1', 'read', false);
+  e.enableEnforce(false);
+  await testEnforce(e, 'bob', 'data1', 'read', true);
+  await testEnforce(e, 'alice', 'data2', 'read', true);
+  e.enableEnforce(true);
+  await testEnforce(e, 'bob', 'data1', 'read', false);
+  await testEnforce(e, 'alice', 'data2', 'read', false);
+});

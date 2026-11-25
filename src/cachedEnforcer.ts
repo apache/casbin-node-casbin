@@ -61,7 +61,7 @@ export class CachedEnforcer extends Enforcer {
   // enforce decides whether a "subject" can access a "object" with the operation "action", input parameters are usually: (sub, obj, act).
   // if rvals is not string , ingore the cache
   public async enforce(...rvals: any[]): Promise<boolean> {
-    if (!this.enableCache) {
+    if (!this.enableCache || !this.enabled) {
       return super.enforce(...rvals);
     }
 
