@@ -100,3 +100,15 @@ test('TestCacheKeysDoNotCollide', async () => {
   await testEnforce(e, 'alice', 'data1$$read', 'write', true);
   await testEnforce(e, 'alice$$data1', 'read', 'write', false);
 });
+
+test('TestCacheIsBounded', async () => {
+  const e = await newCachedEnforcer('examples/basic_model.conf', 'examples/basic_policy.csv');
+  e.setCacheSize(2);
+
+  for (let i = 0; i < 10; i++) {
+    await testEnforce(e, `user${i}`, 'data1', 'read', false);
+    expect(e.getCacheSize()).toBeLessThanOrEqual(2);
+  }
+  await testEnforce(e, 'alice', 'data1', 'read', true);
+  expect(e.getCacheSize()).toBeGreaterThan(0);
+});

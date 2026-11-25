@@ -17,10 +17,14 @@
 
 import { Enforcer, NewEnforcerParams, newEnforcerWithClass } from './enforcer';
 
+// DEFAULT_CACHE_SIZE is the number of decisions a cached enforcer keeps by default.
+export const DEFAULT_CACHE_SIZE = 100000;
+
 // CachedEnforcer wraps Enforcer and provides decision cache
 export class CachedEnforcer extends Enforcer {
   private enableCache = true;
   private m = new Map<string, boolean>();
+  private maxCacheSize = DEFAULT_CACHE_SIZE;
   // cacheVersion is the policy version the cached decisions were made with.
   private cacheVersion = -1;
 
@@ -32,6 +36,17 @@ export class CachedEnforcer extends Enforcer {
   // setEnableCache determines whether to enable cache on e nforce(). When enableCache is enabled, cached result (true | false) will be returned for previous decisions.
   public setEnableCache(enableCache: boolean): void {
     this.enableCache = enableCache;
+  }
+
+  // setCacheSize sets how many decisions are kept at most. Zero or less means no limit.
+  // When the cache is full, adding a new decision empties it first.
+  public setCacheSize(size: number): void {
+    this.maxCacheSize = size;
+  }
+
+  // getCacheSize returns the number of cached decisions.
+  public getCacheSize(): number {
+    return this.m.size;
   }
 
   private static canCache(...rvals: any[]): boolean {
@@ -48,6 +63,9 @@ export class CachedEnforcer extends Enforcer {
   }
 
   private setCache(key: string, value: boolean): void {
+    if (this.maxCacheSize > 0 && this.m.size >= this.maxCacheSize && !this.m.has(key)) {
+      this.invalidateCache();
+    }
     this.m.set(key, value);
   }
 
