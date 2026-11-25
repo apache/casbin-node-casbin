@@ -502,10 +502,22 @@ export class Model {
   }
 
   /**
+   * effectForPolicyType returns the effect of the e section that pairs with ptype
+   * by suffix (p2 -> e2), falling back to the default e section.
+   */
+  private effectForPolicyType(ptype: string): string | undefined {
+    const effects = this.model.get('e');
+    return (effects?.get('e' + ptype.substring(1)) ?? effects?.get('e'))?.value;
+  }
+
+  /**
    * sort policies by subject hieraichy
    */
   public sortPoliciesBySubjectHierarchy(): void {
-    if (this.model.get('e')?.get('e')?.value !== EffectExpress.SUBJECT_PRIORITY) {
+    const ptypes = [...(this.model.get('p')?.keys() ?? [])].filter(
+      (ptype) => this.effectForPolicyType(ptype) === EffectExpress.SUBJECT_PRIORITY
+    );
+    if (ptypes.length === 0) {
       return;
     }
 
@@ -514,7 +526,11 @@ export class Model {
       return;
     }
 
-    this.model.get('p')?.forEach((assertion, ptype) => {
+    ptypes.forEach((ptype) => {
+      const assertion = this.model.get('p')?.get(ptype);
+      if (!assertion) {
+        return;
+      }
       const domainIndex = this.getFieldIndex(ptype, FieldIndex.Domain);
       const subIndex = this.getFieldIndex(ptype, FieldIndex.Subject);
       const subjectHierarchyMap = this.getSubjectHierarchyMap(groupPolicies);

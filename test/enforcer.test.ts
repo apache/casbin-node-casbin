@@ -1018,3 +1018,34 @@ test('test keyMatch4 role pattern with a capture group', async () => {
   await testEnforce(e, 'alice', '/book/1/copy/2', 'GET', false);
   await testEnforce(e, 'alice', '/cup/1/copy/1', 'GET', false);
 });
+
+test('test subjectPriority effect selected by EnforceContext', async () => {
+  const e = await newEnforcer(
+    newModel(`[request_definition]
+r = sub, obj, act
+r2 = sub, obj, act
+[policy_definition]
+p = sub, obj, act, eft
+p2 = sub, obj, act, eft
+[role_definition]
+g = _, _
+[policy_effect]
+e = priority(p.eft) || deny
+e2 = subjectPriority(p.eft) || deny
+[matchers]
+m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
+m2 = g(r2.sub, p2.sub) && r2.obj == p2.obj && r2.act == p2.act
+`)
+  );
+  await e.addGroupingPolicy('admin', 'root');
+  await e.addGroupingPolicy('alice', 'admin');
+  await e.addPolicy('root', 'data1', 'read', 'allow');
+  await e.addPolicy('alice', 'data1', 'read', 'deny');
+  await e.addNamedPolicy('p2', 'root', 'data1', 'read', 'deny');
+  await e.addNamedPolicy('p2', 'alice', 'data1', 'read', 'allow');
+
+  // "p" keeps its order for the priority effect, "p2" is sorted for subjectPriority.
+  await testEnforce(e, 'alice', 'data1', 'read', true);
+  await expect(e.enforce(newEnforceContext('2'), 'alice', 'data1', 'read')).resolves.toBe(true);
+  await expect(e.enforce(newEnforceContext('2'), 'admin', 'data1', 'read')).resolves.toBe(false);
+});
