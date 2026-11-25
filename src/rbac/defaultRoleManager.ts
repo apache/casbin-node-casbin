@@ -34,6 +34,22 @@ function loadOrDefault<K, V>(map: Map<K, V>, key: K, value: V): V {
   return read;
 }
 
+// toleratingMatchingFunc wraps a matching function so that a name always matches
+// itself and an invalid pattern, e.g. a malformed regular expression in one rule,
+// matches nothing else instead of making every lookup fail.
+function toleratingMatchingFunc(fn: MatchingFunc): MatchingFunc {
+  return (str: string, pattern: string): boolean => {
+    if (str === pattern) {
+      return true;
+    }
+    try {
+      return fn(str, pattern);
+    } catch {
+      return false;
+    }
+  };
+}
+
 /**
  * Role represents the data structure for a role in RBAC.
  */
@@ -166,9 +182,9 @@ export class DefaultRoleManager implements RoleManager {
   public async addMatchingFunc(name: string | MatchingFunc, fn?: MatchingFunc): Promise<void> {
     this.hasPattern = true;
     if (typeof name === 'string' && fn) {
-      this.matchingFunc = fn;
+      this.matchingFunc = toleratingMatchingFunc(fn);
     } else if (typeof name === 'function') {
-      this.matchingFunc = name;
+      this.matchingFunc = toleratingMatchingFunc(name);
     } else {
       throw new Error('error: domain should be 1 parameter');
     }
@@ -181,7 +197,7 @@ export class DefaultRoleManager implements RoleManager {
    */
   public async addDomainMatchingFunc(fn: MatchingFunc): Promise<void> {
     this.hasDomainPattern = true;
-    this.domainMatchingFunc = fn;
+    this.domainMatchingFunc = toleratingMatchingFunc(fn);
   }
 
   /**

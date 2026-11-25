@@ -1049,3 +1049,19 @@ m2 = g(r2.sub, p2.sub) && r2.obj == p2.obj && r2.act == p2.act
   await expect(e.enforce(newEnforceContext('2'), 'alice', 'data1', 'read')).resolves.toBe(true);
   await expect(e.enforce(newEnforceContext('2'), 'admin', 'data1', 'read')).resolves.toBe(false);
 });
+
+test('test invalid pattern in policy', async () => {
+  const e = await newEnforcer('examples/keymatch_model.conf');
+  await e.addPolicy('alice', '/alice_data/*', '(GET');
+  await expect(e.enforce('alice', '/alice_data/resource1', 'GET')).rejects.toThrow();
+
+  const e2 = await newEnforcer('examples/rbac_with_pattern_model.conf', 'examples/rbac_with_pattern_policy.csv');
+  await e2.addNamedMatchingFunc('g2', Util.keyMatch2Func);
+  await e2.addNamedGroupingPolicy('g2', '/book/(1', 'book_group');
+
+  // An invalid pattern in a role rule matches nothing but itself.
+  await testEnforce(e2, 'alice', '/book/1', 'GET', true);
+  await testEnforce(e2, 'alice', '/book/(1', 'GET', true);
+  testEnforceSync(e2, 'alice', '/book/1', 'GET', true);
+  expect(await e2.getNamedImplicitRolesForUser('g2', '/book/(1')).toContain('book_group');
+});
