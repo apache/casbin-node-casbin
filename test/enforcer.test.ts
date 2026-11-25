@@ -976,3 +976,33 @@ test('test enforce while policies are removed during evaluation', async () => {
   ]);
   await expect(e.enforceEx('carol', 'data3', 'read')).resolves.toEqual([true, ['carol', 'data3', 'read']]);
 });
+
+test('test # inside quoted strings of a matcher', async () => {
+  const m = newModel();
+  m.addDef('r', 'r', 'sub, obj, act');
+  m.addDef('p', 'p', 'sub, obj, act');
+  m.addDef('e', 'e', 'some(where (p.eft == allow))');
+  m.addDef('m', 'm', 'r.sub == p.sub && r.obj == p.obj && r.act == p.act');
+  const e = await newEnforcer(m);
+  await e.addPolicy('alice', '/a#b', 'read');
+
+  await expect(e.enforceWithMatcher('r.sub == p.sub && r.obj == "/a#b" && r.act == p.act', 'bob', '/a#b', 'read')).resolves.toBe(false);
+  await expect(e.enforceWithMatcher('r.sub == p.sub && r.obj == "/a#b" && r.act == p.act', 'alice', '/a#c', 'read')).resolves.toBe(false);
+  await expect(e.enforceWithMatcher('r.sub == p.sub && r.obj == "/a#b" && r.act == p.act', 'alice', '/a#b', 'read')).resolves.toBe(true);
+
+  const e2 = await newEnforcer(
+    newModel(`[request_definition]
+r = sub, obj, act
+[policy_definition]
+p = sub, obj, act
+[policy_effect]
+e = some(where (p.eft == allow))
+[matchers]
+m = r.sub == p.sub && r.obj == "/a#b" && r.act == 'x;y'
+`)
+  );
+  await e2.addPolicy('alice', '/a#b', 'read');
+  await testEnforce(e2, 'alice', '/a#b', 'x;y', true);
+  await testEnforce(e2, 'alice', '/a#c', 'x;y', false);
+  await testEnforce(e2, 'alice', '/a#b', 'read', false);
+});

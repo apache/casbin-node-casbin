@@ -31,19 +31,26 @@ function escapeAssertion(s: string): string {
     if (quote !== '"' && quote !== "'") {
       continue;
     }
-    let end = i + 1;
-    while (end < s.length && s[end] !== quote) {
-      if (s[end] === '\\') {
-        end++;
-      }
-      end++;
-    }
-    end = Math.min(end + 1, s.length);
+    const end = stringLiteralEnd(s, i);
     res += escapeAssertionUnquoted(s.slice(start, i)) + s.slice(i, end);
     start = end;
     i = end - 1;
   }
   return res + escapeAssertionUnquoted(s.slice(start));
+}
+
+// stringLiteralEnd returns the index just past the string literal that opens at s[i],
+// or the length of s when the literal is not closed.
+function stringLiteralEnd(s: string, i: number): number {
+  const quote = s[i];
+  let end = i + 1;
+  while (end < s.length && s[end] !== quote) {
+    if (s[end] === '\\') {
+      end++;
+    }
+    end++;
+  }
+  return Math.min(end + 1, s.length);
 }
 
 function escapeAssertionUnquoted(s: string): string {
@@ -59,9 +66,17 @@ function escapeAssertionUnquoted(s: string): string {
 }
 
 // removeComments removes the comments starting with # in the text.
+// A # inside a quoted string literal is part of the literal.
 function removeComments(s: string): string {
-  const pos = s.indexOf('#');
-  return pos > -1 ? s.slice(0, pos).trim() : s;
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === '#') {
+      return s.slice(0, i).trim();
+    }
+    if (s[i] === '"' || s[i] === "'") {
+      i = stringLiteralEnd(s, i) - 1;
+    }
+  }
+  return s;
 }
 
 // arrayEquals determines whether two string arrays are identical.

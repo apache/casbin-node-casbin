@@ -120,14 +120,7 @@ export class Config implements ConfigInterface {
     const seenSections = new Set<string>();
 
     lines.forEach((n, index) => {
-      let commentPos = n.indexOf(Config.DEFAULT_COMMENT);
-      if (commentPos > -1) {
-        n = n.slice(0, commentPos);
-      }
-      commentPos = n.indexOf(Config.DEFAULT_COMMENT_SEM);
-      if (commentPos > -1) {
-        n = n.slice(0, commentPos);
-      }
+      n = Config.removeComment(n);
 
       const line = n.trim();
       if (!line) {
@@ -160,6 +153,27 @@ export class Config implements ConfigInterface {
         }
       }
     });
+  }
+
+  // removeComment cuts the line at the first comment marker. A marker inside a
+  // quoted string is part of the value, and a string that is not closed runs to
+  // the end of the line.
+  private static removeComment(line: string): string {
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"' || c === "'") {
+        i++;
+        while (i < line.length && line[i] !== c) {
+          if (line[i] === '\\') {
+            i++;
+          }
+          i++;
+        }
+      } else if (c === Config.DEFAULT_COMMENT || c === Config.DEFAULT_COMMENT_SEM) {
+        return line.slice(0, i);
+      }
+    }
+    return line;
   }
 
   private write(section: string, lineNum: number, line: string): void {

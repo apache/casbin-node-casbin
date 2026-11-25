@@ -51,3 +51,14 @@ describe('multi-line test', () => {
     expect(config.get('mysql::mysql.master.user')).toEqual('root');
   });
 });
+
+describe('comment markers inside quoted strings', () => {
+  it('should keep # and ; inside quoted strings as part of the value', function () {
+    const cfg = Config.newConfigFromText(`[matchers]
+m = r.obj == "/a#b" && r.act == 'x;y' # comment
+n = r.obj == "a;b" ; comment
+`);
+    expect(cfg.get('matchers::m')).toEqual(`r.obj == "/a#b" && r.act == 'x;y'`);
+    expect(cfg.get('matchers::n')).toEqual('r.obj == "a;b"');
+  });
+});

@@ -415,3 +415,10 @@ test('array2DEquals compares both outer lengths', () => {
   expect(util.array2DEquals([], [[]])).toBe(false);
   expect(util.array2DEquals([['alice']], [['alice']])).toBe(true);
 });
+
+test('test removeComments', () => {
+  expect(util.removeComments('r_sub == p_sub # comment')).toEqual('r_sub == p_sub');
+  expect(util.removeComments('r_obj == "/a#b" && r_act == \'#\' # comment')).toEqual('r_obj == "/a#b" && r_act == \'#\'');
+  expect(util.removeComments('r_obj == "a\\"#b"')).toEqual('r_obj == "a\\"#b"');
+  expect(util.removeComments('r_obj == p_obj')).toEqual('r_obj == p_obj');
+});
