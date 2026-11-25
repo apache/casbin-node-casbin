@@ -434,3 +434,11 @@ test('test keyMatch4Func and keyGet2Func with capture groups in the pattern', ()
   expect(util.keyMatch4Func('/c/123/child/123', '/(a|b)/{id}/child/{id}')).toEqual(false);
   expect(util.keyMatch4Func('/123/x/123', '/{id}/(x|y)/{id}')).toEqual(true);
 });
+
+test('test setEquals does not sort its arguments', () => {
+  const a = ['b', 'a'];
+  const b = ['a', 'b'];
+  expect(util.setEquals(a, b)).toEqual(true);
+  expect(a).toEqual(['b', 'a']);
+  expect(util.setEquals(['b', 'c'], b)).toEqual(false);
+});

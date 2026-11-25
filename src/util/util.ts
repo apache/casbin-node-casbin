@@ -128,7 +128,7 @@ function paramsToString(...v: string[]): string {
 
 // setEquals determines whether two string sets are identical.
 function setEquals(a: string[], b: string[]): boolean {
-  return arrayEquals(a.sort(), b.sort());
+  return arrayEquals([...a].sort(), [...b].sort());
 }
 
 // readFile return a promise for readFile.
