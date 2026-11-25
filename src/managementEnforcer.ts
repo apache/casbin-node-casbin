@@ -591,6 +591,7 @@ export class ManagementEnforcer extends InternalEnforcer {
    */
   public async addFunction(name: string, func: MatchingFunction): Promise<void> {
     this.fm.addFunction(name, func);
+    this.bumpPolicyVersion();
   }
   public async selfAddPolicy(sec: string, ptype: string, rule: string[]): Promise<boolean> {
     return this.addPolicyWithoutNotify(sec, ptype, rule);

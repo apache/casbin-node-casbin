@@ -72,6 +72,18 @@ export class CoreEnforcer {
   protected acceptJsonRequest = false;
   protected fs?: FileSystem;
 
+  // policyVersion changes whenever the policy, the role links or anything else that
+  // can change an enforcement decision changes, so that cached decisions can be dropped.
+  private policyVersion = 0;
+
+  protected getPolicyVersion(): number {
+    return this.policyVersion;
+  }
+
+  protected bumpPolicyVersion(): void {
+    this.policyVersion++;
+  }
+
   /**
    * setFileSystem sets a file system to read the model file or the policy file.
    * @param fs {@link FileSystem}
@@ -109,6 +121,7 @@ export class CoreEnforcer {
   public loadModel(): void {
     this.model = newModelFromFile(this.modelPath, this.fs);
     this.model.printModel();
+    this.bumpPolicyVersion();
   }
 
   /**
@@ -127,6 +140,7 @@ export class CoreEnforcer {
    */
   public setModel(m: Model): void {
     this.model = m;
+    this.bumpPolicyVersion();
   }
 
   /**
@@ -173,6 +187,7 @@ export class CoreEnforcer {
    */
   public setRoleManager(rm: RoleManager): void {
     this.rmMap.set('g', rm);
+    this.bumpPolicyVersion();
   }
 
   /**
@@ -183,6 +198,7 @@ export class CoreEnforcer {
    */
   public setNamedRoleManager(ptype: string, rm: RoleManager): void {
     this.rmMap.set(ptype, rm);
+    this.bumpPolicyVersion();
   }
 
   /**
@@ -206,6 +222,7 @@ export class CoreEnforcer {
    */
   public setEffector(eft: Effector): void {
     this.eft = eft;
+    this.bumpPolicyVersion();
   }
 
   /**
@@ -218,6 +235,7 @@ export class CoreEnforcer {
         rm.clear().catch(() => undefined);
       });
     }
+    this.bumpPolicyVersion();
   }
 
   public initRmMap(): void {
@@ -318,6 +336,7 @@ export class CoreEnforcer {
     if (this.autoBuildRoleLinks) {
       await this.buildRoleLinksInternal();
     }
+    this.bumpPolicyVersion();
   }
 
   /**
@@ -353,6 +372,7 @@ export class CoreEnforcer {
     if (this.autoBuildRoleLinks) {
       await this.buildRoleLinksInternal();
     }
+    this.bumpPolicyVersion();
     return true;
   }
 
@@ -452,7 +472,9 @@ export class CoreEnforcer {
   public async addNamedMatchingFunc(ptype: string, fn: MatchingFunc): Promise<void> {
     const rm = this.rmMap.get(ptype);
     if (rm) {
-      return await (<DefaultRoleManager>rm).addMatchingFunc(fn);
+      await (<DefaultRoleManager>rm).addMatchingFunc(fn);
+      this.bumpPolicyVersion();
+      return;
     }
 
     throw Error('Target ptype not found.');
@@ -466,7 +488,8 @@ export class CoreEnforcer {
   public async addNamedDomainMatchingFunc(ptype: string, fn: MatchingFunc): Promise<void> {
     const rm = this.rmMap.get(ptype);
     if (rm) {
-      return await (<DefaultRoleManager>rm).addDomainMatchingFunc(fn);
+      await (<DefaultRoleManager>rm).addDomainMatchingFunc(fn);
+      this.bumpPolicyVersion();
     }
   }
 
@@ -490,6 +513,7 @@ export class CoreEnforcer {
       this.rmMap.set(ptype, rm);
     }
     await this.model.buildIncrementalRoleLinks(rm, op, 'g', ptype, rules);
+    this.bumpPolicyVersion();
   }
 
   protected async buildRoleLinksInternal(): Promise<void> {
@@ -497,6 +521,7 @@ export class CoreEnforcer {
       await rm.clear();
       await this.model.buildRoleLinks(this.rmMap);
     }
+    this.bumpPolicyVersion();
   }
 
   private *privateEnforce(

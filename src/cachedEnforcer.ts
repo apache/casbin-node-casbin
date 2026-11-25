@@ -21,6 +21,8 @@ import { Enforcer, NewEnforcerParams, newEnforcerWithClass } from './enforcer';
 export class CachedEnforcer extends Enforcer {
   private enableCache = true;
   private m = new Map<string, boolean>();
+  // cacheVersion is the policy version the cached decisions were made with.
+  private cacheVersion = -1;
 
   // invalidateCache deletes all the existing cached decisions.
   public invalidateCache(): void {
@@ -48,12 +50,23 @@ export class CachedEnforcer extends Enforcer {
     this.m.set(key, value);
   }
 
+  // syncCacheVersion drops all cached decisions when the policy has changed since they were cached.
+  private syncCacheVersion(version: number): void {
+    if (version !== this.cacheVersion) {
+      this.invalidateCache();
+      this.cacheVersion = version;
+    }
+  }
+
   // enforce decides whether a "subject" can access a "object" with the operation "action", input parameters are usually: (sub, obj, act).
   // if rvals is not string , ingore the cache
   public async enforce(...rvals: any[]): Promise<boolean> {
     if (!this.enableCache) {
       return super.enforce(...rvals);
     }
+
+    const version = this.getPolicyVersion();
+    this.syncCacheVersion(version);
 
     let key = '';
     const cache = CachedEnforcer.canCache(...rvals);
@@ -69,7 +82,8 @@ export class CachedEnforcer extends Enforcer {
 
     const res = await super.enforce(...rvals);
 
-    if (cache) {
+    // A decision made while the policy changed may be outdated, so it is not cached.
+    if (cache && version === this.getPolicyVersion()) {
       this.setCache(key, res);
     }
 

@@ -28,11 +28,13 @@ export class InternalEnforcer extends CoreEnforcer {
    * The subjectPriority effect resolves conflicts by the order of the "p" rules, so that order has
    * to be rebuilt whenever a "p" or "g" rule changes, not only when the policy is loaded from an
    * adapter. It is a no-op for models that do not use the effect.
+   * It runs after every policy change, so it also marks cached decisions as outdated.
    */
   private resortPoliciesBySubjectHierarchy(ok: boolean): boolean {
     if (ok) {
       this.model.sortPoliciesBySubjectHierarchy();
     }
+    this.bumpPolicyVersion();
     return ok;
   }
 
