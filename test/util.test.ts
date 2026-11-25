@@ -422,3 +422,15 @@ test('test removeComments', () => {
   expect(util.removeComments('r_obj == "a\\"#b"')).toEqual('r_obj == "a\\"#b"');
   expect(util.removeComments('r_obj == p_obj')).toEqual('r_obj == p_obj');
 });
+
+test('test keyMatch4Func and keyGet2Func with capture groups in the pattern', () => {
+  // Capture groups of the pattern's own must not shift which value a token gets.
+  expect(util.keyGet2Func('/a/x/42', '/(a|b)/x/:id', 'id')).toEqual('42');
+  expect(util.keyGet2Func('/42/a', '/:id/(a|b)', 'id')).toEqual('42');
+  expect(util.keyGet2Func('/b/7/c/9', '/(a|b)/:x/(c|d)/:y', 'y')).toEqual('9');
+
+  expect(util.keyMatch4Func('/a/123/child/123', '/(a|b)/{id}/child/{id}')).toEqual(true);
+  expect(util.keyMatch4Func('/a/123/child/456', '/(a|b)/{id}/child/{id}')).toEqual(false);
+  expect(util.keyMatch4Func('/c/123/child/123', '/(a|b)/{id}/child/{id}')).toEqual(false);
+  expect(util.keyMatch4Func('/123/x/123', '/{id}/(x|y)/{id}')).toEqual(true);
+});

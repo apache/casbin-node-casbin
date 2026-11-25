@@ -1006,3 +1006,15 @@ m = r.sub == p.sub && r.obj == "/a#b" && r.act == 'x;y'
   await testEnforce(e2, 'alice', '/a#c', 'x;y', false);
   await testEnforce(e2, 'alice', '/a#b', 'read', false);
 });
+
+test('test keyMatch4 role pattern with a capture group', async () => {
+  const e = await newEnforcer('examples/rbac_with_pattern_model.conf');
+  await e.addNamedMatchingFunc('g2', Util.keyMatch4Func);
+  await e.addPolicy('alice', 'book_group', 'GET');
+  await e.addNamedGroupingPolicy('g2', '/(book|pen)/{id}/copy/{id}', 'book_group');
+
+  await testEnforce(e, 'alice', '/book/1/copy/1', 'GET', true);
+  await testEnforce(e, 'alice', '/pen/1/copy/1', 'GET', true);
+  await testEnforce(e, 'alice', '/book/1/copy/2', 'GET', false);
+  await testEnforce(e, 'alice', '/cup/1/copy/1', 'GET', false);
+});

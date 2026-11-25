@@ -107,6 +107,18 @@ function keyMatch2Func(...args: any[]): boolean {
   return keyMatch2(name1, name2);
 }
 
+// tokenGroup returns the named capture group that stands in for the i-th pattern
+// variable. Values are looked up by group name rather than by position, because the
+// pattern can carry capture groups of its own, e.g. "/(a|b)/{id}".
+function tokenGroup(i: number, expr: string): string {
+  return `(?<casbinToken${i}>${expr})`;
+}
+
+// tokenValue returns the value captured for the i-th pattern variable.
+function tokenValue(values: RegExpExecArray, i: number): string {
+  return (values as RegExpExecArray & { groups: { [key: string]: string } }).groups[`casbinToken${i}`];
+}
+
 // KeyGet2 returns value matched pattern
 // For example, "/resource1" matches "/:resource"
 // if the pathVar == "resource", then "resource1" will be returned
@@ -116,8 +128,11 @@ function keyGet2(key1: string, key2: string, pathVar: string): string {
     key2 = '.*';
   }
 
-  const keys: string[] = key2.match(/:[^/]+/g) || [];
-  key2 = key2.replace(/:[^/]+/g, '([^/]+)');
+  const keys: string[] = [];
+  key2 = key2.replace(/:[^/]+/g, (token) => {
+    keys.push(token);
+    return tokenGroup(keys.length - 1, '[^/]+');
+  });
 
   const values = new RegExp('^' + key2 + '$').exec(key1);
   if (!values) {
@@ -127,7 +142,7 @@ function keyGet2(key1: string, key2: string, pathVar: string): string {
   if (index === -1) {
     return '';
   }
-  return values[index + 1];
+  return tokenValue(values, index);
 }
 
 function keyGet2Func(...args: any[]): string {
@@ -177,62 +192,24 @@ function keyMatch4(key1: string, key2: string): boolean {
   key2 = key2.replace(/\/\*/g, '/.*');
 
   const tokens: string[] = [];
-  let j = -1;
-  for (let i = 0; i < key2.length; i++) {
-    const c = key2.charAt(i);
-    if (c === '{') {
-      j = i;
-    } else if (c === '}') {
-      tokens.push(key2.substring(j, i + 1));
-    }
-  }
+  key2 = key2.replace(/\{[^/]+?\}/g, (token) => {
+    tokens.push(token);
+    return tokenGroup(tokens.length - 1, '[^/]+');
+  });
 
-  let regexp = new RegExp(/(.*){[^/]+}(.*)/g);
-
-  for (;;) {
-    if (!key2.includes('/{')) {
-      break;
-    }
-    const replaced = key2.replace(regexp, '$1([^/]+)$2');
-    if (replaced === key2) {
-      break;
-    }
-    key2 = replaced;
-  }
-
-  regexp = new RegExp('^' + key2 + '$');
-
-  let values: RegExpExecArray | null | string[] = regexp.exec(key1);
-
+  const values = new RegExp('^' + key2 + '$').exec(key1);
   if (!values) {
     return false;
   }
 
-  values = values.slice(1);
-
-  if (tokens.length !== values.length) {
-    throw new Error('KeyMatch4: number of tokens is not equal to number of values');
-  }
-
-  const m = new Map<string, string[]>();
-  tokens.forEach((n, index) => {
-    const key = tokens[index];
-    let v = m.get(key);
-    if (!v) {
-      v = [];
-    }
-
-    if (values) {
-      v.push(values[index]);
-    }
-    m.set(key, v);
-  });
-
-  for (const value of m.values()) {
-    for (let i = 1; i < value.length; i++) {
-      if (value[i] !== value[0]) {
-        return false;
-      }
+  const m = new Map<string, string>();
+  for (let i = 0; i < tokens.length; i++) {
+    const value = tokenValue(values, i);
+    const first = m.get(tokens[i]);
+    if (first === undefined) {
+      m.set(tokens[i], value);
+    } else if (first !== value) {
+      return false;
     }
   }
 
