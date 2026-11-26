@@ -41,6 +41,7 @@ m = r.sub == p.sub && r.obj == p.obj && r.act == p.act
     `"p", "admin", "/",  "PUT"`,
     `"p","admin",/, "DELETE"`,
     `p,   " admin","/ ", "PATCH"`,
+    `p, admin, """quoted""", "a""b"`,
   ];
 
   const expectedPolicy = [
@@ -49,6 +50,7 @@ m = r.sub == p.sub && r.obj == p.obj && r.act == p.act
     ['admin', '/', 'PUT'],
     ['admin', '/', 'DELETE'],
     ['admin', '/', 'PATCH'],
+    ['admin', '"quoted"', 'a"b'],
   ];
 
   testdata.forEach((n) => {

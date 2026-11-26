@@ -105,12 +105,8 @@ export class PolicyLoader {
       return;
     }
 
-    const values = tokens[0].slice(1).map((v) => {
-      if (v.startsWith('"') && v.endsWith('"')) {
-        v = v.slice(1, -1);
-      }
-      return v.replace(/""/g, '"').trim();
-    });
+    // The CSV parser has already removed the quotes and turned "" into "
+    const values = tokens[0].slice(1).map((v) => v.trim());
 
     policy.policy.push(values);
   }

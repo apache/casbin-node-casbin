@@ -57,6 +57,22 @@ test('savePolicy keeps fields with commas in one field', async () => {
   await expect(e2.enforce('bob', 'data1', 'write')).resolves.toBe(false);
 });
 
+test('savePolicy keeps the double quotes of a field', async () => {
+  const files = new Map<string, string>([['policy.csv', '']]);
+  const e = await newEnforcer(newModel(modelText), new FileAdapter('policy.csv', memoryFileSystem(files)));
+  await e.addPolicy('alice', '"quoted"', 'read');
+  await e.addPolicy('bob', '"', 'read');
+  await e.addPolicy('carol', 'a""b', 'read');
+  await e.savePolicy();
+
+  const e2 = await newEnforcer(newModel(modelText), new FileAdapter('policy.csv', memoryFileSystem(files)));
+  expect(await e2.getPolicy()).toEqual([
+    ['alice', '"quoted"', 'read'],
+    ['bob', '"', 'read'],
+    ['carol', 'a""b', 'read'],
+  ]);
+});
+
 test('savePolicy rejects fields with line breaks', async () => {
   const files = new Map<string, string>([['policy.csv', 'p, alice, data1, read']]);
   const e = await newEnforcer(newModel(modelText), new FileAdapter('policy.csv', memoryFileSystem(files)));
